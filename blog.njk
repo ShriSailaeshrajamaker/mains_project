@@ -1,0 +1,156 @@
+---
+pagination:
+  data: blogs
+  size: 1
+  alias: post
+permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
+---
+{%- set c = chrome[post.site] -%}
+{%- set th = themes[post.site] -%}
+{{ c.head | safe }}
+{{ c.bodyTag | safe }}
+{{ c.top | safe }}
+
+<!-- ===== BLOG ARTICLE (replaces the product grid) ===== -->
+<style>
+  .ba-wrap{max-width:780px;margin:0 auto;padding:18px 20px 50px;}
+  .ba-back{display:inline-flex;align-items:center;gap:7px;color:var(--soft);font-weight:600;font-size:14px;text-decoration:none;margin-bottom:26px;transition:color .2s;}
+  .ba-back:hover{color:var(--accent);}
+  .ba-cat{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+  .ba-title{font-size:38px;line-height:1.12;font-weight:800;color:var(--brand);letter-spacing:-0.01em;margin-bottom:18px;}
+  .ba-meta{display:flex;align-items:center;flex-wrap:wrap;gap:14px;color:var(--soft);font-size:14px;font-weight:600;margin-bottom:26px;}
+  .ba-stars{color:#f5a623;letter-spacing:2px;font-size:15px;}
+  .ba-dot{width:4px;height:4px;border-radius:50%;background:var(--soft);opacity:.5;display:inline-block;}
+  .ba-hero{border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-bottom:30px;background:var(--card);}
+  .ba-hero img{width:100%;height:380px;object-fit:cover;display:block;}
+  .ba-lead{font-size:19px;line-height:1.7;color:var(--text);margin-bottom:28px;}
+
+  /* price / verdict boxes */
+  .ba-pricebox{background:var(--card);border:1px solid var(--border);border-left:5px solid var(--accent);border-radius:16px;padding:24px 26px;margin:28px 0;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.06);}
+  .ba-pricebox .pb-eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  .ba-pricebox .pb-name{font-size:21px;font-weight:800;color:var(--brand);line-height:1.25;margin-bottom:8px;}
+  .ba-pricebox .pb-price{font-size:15px;color:var(--soft);}
+  .ba-pricebox .pb-price b{color:var(--accent);font-size:18px;}
+  .ba-pricebox .pb-was{text-decoration:line-through;opacity:.6;margin-left:6px;}
+  .ba-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px 24px;border-radius:12px;text-decoration:none;white-space:nowrap;transition:transform .2s,box-shadow .2s,filter .2s;box-shadow:0 8px 22px rgba(0,0,0,.12);}
+  .ba-btn:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 12px 28px rgba(0,0,0,.18);}
+
+  .ba-body{font-size:17px;line-height:1.8;color:var(--text);margin:30px 0;}
+  .ba-body p{margin-bottom:20px;}
+  .ba-body h2{font-size:24px;color:var(--brand);font-weight:800;margin:32px 0 14px;}
+  .ba-body h3{font-size:19px;color:var(--brand);font-weight:700;margin:24px 0 10px;}
+  .ba-body a{color:var(--accent);text-decoration:underline;font-weight:600;}
+  .ba-body ul,.ba-body ol{margin:0 0 20px 22px;} .ba-body li{margin-bottom:9px;}
+  .ba-body img{max-width:100%;border-radius:12px;margin:18px 0;}
+
+  /* pros / cons */
+  .ba-pc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:30px 0;}
+  .ba-pccard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.05);}
+  .ba-pccard h4{font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .ba-pros h4{color:#22a06b;} .ba-cons h4{color:var(--accent);}
+  .ba-pccard ul{list-style:none;padding:0;margin:0;}
+  .ba-pccard li{font-size:15px;color:var(--text);opacity:.92;padding-left:26px;position:relative;margin-bottom:12px;line-height:1.5;}
+  .ba-pros li::before{content:"✓";position:absolute;left:0;color:#22a06b;font-weight:800;}
+  .ba-cons li::before{content:"✕";position:absolute;left:0;color:var(--accent);font-weight:800;}
+
+  /* verdict box */
+  .ba-verdict{border:1px solid var(--border);border-radius:18px;padding:30px;margin:34px 0;background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--card)), var(--card));}
+  .ba-verdict .v-eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}
+  .ba-verdict .v-name{font-size:24px;font-weight:800;color:var(--brand);line-height:1.25;margin-bottom:14px;}
+  .ba-verdict .v-text{font-size:16px;color:var(--soft);line-height:1.7;margin-bottom:22px;}
+
+  /* related */
+  .ba-related-h{font-size:26px;font-weight:800;color:var(--brand);margin:44px 0 20px;}
+  .ba-related{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;}
+  .ba-rcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;transition:transform .2s,box-shadow .2s;display:block;}
+  .ba-rcard:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.12);}
+  .ba-rcard img{width:100%;height:150px;object-fit:cover;display:block;}
+  .ba-rcard .rc-name{padding:13px 14px;font-weight:700;color:var(--text);font-size:14px;text-align:center;}
+
+  @media(max-width:640px){
+    .ba-title{font-size:28px;}
+    .ba-hero img{height:230px;}
+    .ba-pc{grid-template-columns:1fr;}
+    .ba-pricebox{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+
+<div class="ba-wrap">
+  <a class="ba-back" href="{{ th.backUrl }}">‹ Back to {{ th.backLabel }}</a>
+
+  {% if post.category %}<div class="ba-cat">{{ post.category }}</div>{% endif %}
+  <h1 class="ba-title">{{ post.name }} — Honest Review</h1>
+
+  <div class="ba-meta">
+    {% if post.rating %}
+      {%- set full = (post.rating | round(0, 'floor')) | int -%}
+      {%- set half = 1 if (post.rating - full) >= 0.5 else 0 -%}
+      <span class="ba-stars">{% for i in range(0, full) %}★{% endfor %}{% if half %}⯨{% endif %}{% for i in range(0, 5 - full - half) %}☆{% endfor %}</span>
+      <span>{{ post.rating }} / 5</span>
+      <span class="ba-dot"></span>
+    {% endif %}
+    <span>Updated daily</span>
+    <span class="ba-dot"></span>
+    <span>{{ post.readMins }} min read</span>
+  </div>
+
+  {% if post.blogImage %}<div class="ba-hero"><img src="{{ post.blogImage }}" alt="{{ post.name }}"></div>{% endif %}
+
+  {% if post.lead %}<p class="ba-lead">{{ post.lead }}</p>{% endif %}
+
+  <!-- Quick verdict / best price box -->
+  <div class="ba-pricebox">
+    <div>
+      <div class="pb-eyebrow">⚡ Quick verdict — best price</div>
+      <div class="pb-name">{{ post.name }}</div>
+      {% if post.price %}<div class="pb-price">Today's price: <b>{{ post.price }}</b>{% if post.was %}<span class="pb-was">{{ post.was }}</span>{% endif %}</div>{% endif %}
+    </div>
+    <a class="ba-btn" href="{{ post.link }}" target="_blank" rel="noopener sponsored nofollow">Check price →</a>
+  </div>
+
+  {% if post.body %}<div class="ba-body">{{ post.body | markdown | safe }}</div>{% endif %}
+
+  {% if post.pros.length or post.cons.length %}
+  <div class="ba-pc">
+    {% if post.pros.length %}<div class="ba-pccard ba-pros"><h4>👍 What we loved</h4><ul>{% for x in post.pros %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if post.cons.length %}<div class="ba-pccard ba-cons"><h4>👎 Worth knowing</h4><ul>{% for x in post.cons %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Where to get it -->
+  <div class="ba-pricebox">
+    <div>
+      <div class="pb-eyebrow">👇 Where to get it</div>
+      <div class="pb-name">{{ post.name }}</div>
+      {% if post.price %}<div class="pb-price">Today's price: <b>{{ post.price }}</b>{% if post.was %}<span class="pb-was">{{ post.was }}</span>{% endif %}</div>{% endif %}
+    </div>
+    <a class="ba-btn" href="{{ post.link }}" target="_blank" rel="noopener sponsored nofollow">Check price →</a>
+  </div>
+
+  <!-- Our verdict -->
+  {% if post.verdict %}
+  <div class="ba-verdict">
+    <div class="v-eyebrow">★ Our verdict</div>
+    <div class="v-name">{{ post.name }}</div>
+    <div class="v-text">{{ post.verdict }}</div>
+    <a class="ba-btn" href="{{ post.link }}" target="_blank" rel="noopener sponsored nofollow">Get it at the best price →</a>
+  </div>
+  {% endif %}
+
+  {% if post.related.length %}
+  <h2 class="ba-related-h">More finds you'll like</h2>
+  <div class="ba-related">
+    {% for r in post.related %}
+    <a class="ba-rcard" href="/{{ r.site }}/blogs/{{ r.slug }}/">
+      {% if r.image %}<img src="{{ r.image }}" alt="{{ r.name }}">{% endif %}
+      <div class="rc-name">{{ r.name }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{{ c.bottom | safe }}
+</body>
+</html>

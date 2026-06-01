@@ -1,0 +1,13 @@
+{
+  "name": "rixsto-sites",
+  "version": "1.0.0",
+  "description": "Five affiliate storefronts + auto-generated product blog pages (Decap CMS + Eleventy).",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "markdown-it": "^14.0.0"
+  }
+}

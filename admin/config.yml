@@ -1,0 +1,79 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images"
+public_folder: "/images"
+
+# Reusable field set: each PRODUCT now also carries its BLOG content.
+# Adding a product = filling its card details + its blog (lead, pros, cons, images, buy link).
+# The website turns each entry into its own blog page automatically.
+
+collections:
+
+  - name: "onlinefinds"
+    label: "① Online Finds"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/index.json"
+        fields: &product_blog_fields
+          - label: Products
+            name: products
+            label_singular: "Product"
+            widget: list
+            summary: "{{fields.name}}  —  {{fields.category}}"
+            fields:
+              # --- product card ---
+              - { label: "Product name", name: name, widget: string }
+              - { label: "Card image", name: image, widget: image, required: false, hint: "Shown on the product grid. Upload or paste a URL." }
+              - { label: "Category", name: category, widget: string, hint: "Used for the filter tabs, e.g. Kitchen Gadgets" }
+              - { label: "Buy link (affiliate / Dukaan product URL)", name: link, widget: string, hint: "Where the BUY button in the blog points" }
+              - { label: "Price (today's)", name: price, widget: string, required: false, hint: "e.g. ₹1,799 — shown in the price boxes" }
+              - { label: "Original price (struck-through)", name: was, widget: string, required: false, hint: "e.g. ₹3,999 — optional, shows the discount" }
+              - { label: "Rating (0–5)", name: rating, widget: number, required: false, value_type: float, min: 0, max: 5, step: 0.5, hint: "Shows star rating in the blog header. Leave blank to hide." }
+              # --- blog / review content ---
+              - { label: "── Blog content below ──", name: blog_divider, widget: hidden, default: "" }
+              - { label: "Blog: slug (unique, lowercase, no spaces)", name: slug, widget: string, hint: "Used in the blog page link, e.g. egg-container-review" }
+              - { label: "Blog: intro / lead", name: lead, widget: text, required: false }
+              - { label: "Blog: body image", name: blog_image, widget: image, required: false, hint: "Large image shown at the top of the blog. TIP: if it looks cut off, crop it here in the editor (click the image, choose crop) to a wide/landscape shape before publishing." }
+              - label: "Blog: main content (paragraphs, links, headings)"
+                name: body
+                widget: markdown
+                required: false
+                hint: "Write freely — paragraphs, links, bold, headings. This is the main article. Use the link button in the toolbar to add links between paragraphs."
+              - { label: "Blog: pros", name: pros, widget: list, required: false, field: { label: Pro, name: item, widget: string } }
+              - { label: "Blog: cons", name: cons, widget: list, required: false, field: { label: Con, name: item, widget: string } }
+              - { label: "Blog: verdict", name: verdict, widget: text, required: false }
+
+  - name: "dailyloot"
+    label: "② DailyLoot"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/dailyloot.json"
+        fields: *product_blog_fields
+
+  - name: "justoneclick"
+    label: "③ Just One Click"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/justoneclick.json"
+        fields: *product_blog_fields
+
+  - name: "phaseblank"
+    label: "④ Phase Blank"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/phaseblank.json"
+        fields: *product_blog_fields
+
+  - name: "cartedupdaily"
+    label: "⑤ CartedUpDaily"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/cartedupdaily.json"
+        fields: *product_blog_fields

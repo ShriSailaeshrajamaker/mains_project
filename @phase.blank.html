@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discover useful products curated by @phase.blank">
+    <title>@phase.blank</title>
+    <link rel="icon" type="image/png" href="phaseblank.jpg">
+
+    <style>
+        :root{
+            --accent:#6f8fb3;
+            --brand:#9fb8d4;
+            --text:#e5edf7;
+            --border:#263547;
+            --bg:#0b1220;
+        }
+
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+            font-family:system-ui,-apple-system,sans-serif;
+        }
+
+        #starsCanvas{
+            position:fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            z-index:-1;
+            pointer-events:none;
+        }
+
+        body{
+            background:var(--bg);
+            color:var(--text);
+        }
+        a{color:var(--brand);}
+
+        /* TOP BANNER */
+        .top-banner{
+            position:sticky;
+            top:0;
+            background:linear-gradient(90deg,#111827,#334155);
+            color:#fff;
+            text-align:center;
+            padding:10px;
+            font-size:14px;
+            z-index:1000;
+        }
+        .top-banner a{
+            color:#22c55e;
+            text-decoration:none;
+            font-weight:600;
+            margin-left:6px;
+        }
+
+        /* NAVBAR */
+        .navbar{
+            background:#111827;
+            border-bottom:1px solid var(--border);
+            position:relative;
+        }
+        .nav-inner{
+            max-width:1200px;
+            margin:auto;
+            padding:16px 20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .logo{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:700;
+            font-size:18px;
+            color:var(--brand);
+        }
+        .logo img{
+            width:36px;
+            height:36px;
+            border-radius:50%;
+        }
+        .nav-links{
+            display:flex;
+            gap:20px;
+            font-size:14px;
+        }
+        .nav-links a{
+            text-decoration:none;
+            color:#d6e4f5;
+        }
+        .nav-links a:hover{
+            color:var(--accent);
+        }
+        .hamburger{
+            display:none;
+            font-size:28px;
+            cursor:pointer;
+            color:#d6e4f5;
+        }
+
+        /* Mobile Dropdown Menu */
+        .mobile-menu{
+            display:none;
+            position:absolute;
+            top:100%;
+            left:0;
+            width:100%;
+            background:#111827;
+            border-top:1px solid var(--border);
+            box-shadow:0 4px 12px rgba(0,0,0,0.1);
+            padding:15px 20px;
+            z-index:998;
+        }
+        .mobile-menu a{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding:12px 0;
+            color:#e5edf7;
+            text-decoration:none;
+            font-size:16px;
+            font-weight:500;
+            border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+        .mobile-menu a:last-child{ border-bottom:none; }
+
+        /* HERO */
+        .hero{
+            text-align:center;
+            padding:50px 20px 20px;
+        }
+        .hero h1{
+            font-size:34px;
+            color:var(--brand);
+            margin-bottom:8px;
+        }
+        .hero p{
+            color:#b8c4d4;
+            font-size:14px;
+        }
+
+        /* SEARCH */
+        .search-wrapper{
+            display:flex;
+            justify-content:center;
+            padding:25px 20px;
+        }
+        .search-box{
+            width:100%;
+            max-width:420px;
+            padding:13px 16px;
+            border-radius:8px;
+            border:1px solid #334155;
+            font-size:15px;
+            background:#111827;
+            color:#ffffff;
+        }
+
+        .search-box::placeholder{
+            color:#94a3b8;
+        }
+
+        /* CATEGORY TABS */
+        .category-tabs{
+            max-width:1200px;
+            margin:20px auto 10px;
+            padding:0 20px;
+            overflow-x:auto;
+            white-space:nowrap;
+            scrollbar-width:none;
+        }
+        .category-tabs::-webkit-scrollbar{ display:none; }
+        .tabs-container{
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            padding:10px 0;
+        }
+        .tab{
+            padding:10px 18px;
+            border-radius:50px;
+            background:#1a2433;
+            color:#d6e4f5;
+            font-size:14px;
+            font-weight:500;
+            cursor:pointer;
+            transition:all 0.3s ease;
+            white-space:nowrap;
+        }
+        .tab.active{
+            background:#334155;
+            color:white;
+            font-weight:600;
+        }
+
+        /* PRODUCTS */
+        .products{
+            max-width:1200px;
+            margin:auto;
+            padding:10px 20px 40px;
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+            gap:22px;
+        }
+        .product{
+            background:#111827;
+            border-radius:10px;
+            overflow:hidden;
+            border:1px solid var(--border);
+            cursor:pointer;
+            transition:.2s;
+        }
+        .product:hover{
+            transform:translateY(-3px);
+            box-shadow:0 6px 18px rgba(0,0,0,0.08);
+        }
+        .product img{
+            width:100%;
+            height:180px;
+            object-fit:cover;
+        }
+        .product-title{
+            padding:14px;
+            text-align:center;
+            font-weight:600;
+            color:#e5edf7;
+        }
+        .special-card{
+            border:2px solid #f97316;
+            background:#1f2937;
+        }
+
+        /* PROMO BLOCK */
+        .promo-block{
+            max-width:800px;
+            margin:30px auto;
+            background:#1a2433;
+            padding:25px;
+            text-align:center;
+            border-radius:12px;
+        }
+        .promo-btn{
+            display:inline-block;
+            margin-top:10px;
+            background:black;
+            color:white;
+            padding:10px 18px;
+            border-radius:8px;
+            text-decoration:none;
+        }
+
+        /* Trust Bar - at bottom */
+        .trust-bar{
+            background:#111827;
+            padding:15px 20px;
+            text-align:center;
+            font-size:13px;
+            color:#d6e4f5;
+            border-top:1px solid var(--border);
+            font-weight:500;
+        }
+
+        /* WHATSAPP */
+        .whatsapp-float{
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #25D366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 9999;
+            text-decoration: none;
+        }
+
+        /* FOOTER */
+        footer{
+            background:#111827;
+            border-top:1px solid var(--border);
+            margin-top:20px;
+        }
+        .footer-inner{
+            max-width:1200px;
+            margin:auto;
+            padding:40px 20px;
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:30px;
+        }
+        .footer-col h4{
+            margin-bottom:12px;
+            color:var(--brand);
+        }
+        .footer-col a{
+            display:block;
+            text-decoration:none;
+            color:#b8c4d4;
+            font-size:13px;
+            margin-bottom:6px;
+        }
+        .footer-bottom{
+            text-align:center;
+            font-size:12px;
+            color:#b8c4d4;
+            padding:15px;
+            border-top:1px solid var(--border);
+        }
+
+        @media(max-width:600px){
+            .products{grid-template-columns:repeat(2,1fr);}
+            .nav-links{display:none;}
+            .hamburger{display:block;}
+            .tabs-container{justify-content:flex-start;}
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="starsCanvas"></canvas>
+
+    <!-- TOP BANNER -->
+    <div class="top-banner">
+        🚀 100+ Curated Picks →
+        <a href="https://rixsto.in">Explore RIXSTO</a>
+    </div>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="nav-inner">
+            <div class="logo">
+                <a href="https://www.instagram.com/phase.blank" target="_blank"><img src="phaseblank.jpg"></a>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="https://www.instagram.com/phase.blank" target="_blank" style="color:#9fb8d4;font-weight:600;display:flex;align-items:center;gap:6px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M7.75 2C4.574 2 2 4.574 2 7.75v8.5C2 19.426 4.574 22 7.75 22h8.5C19.426 22 22 19.426 22 16.25v-8.5C22 4.574 19.426 2 16.25 2h-8.5zm0 2h8.5A3.75 3.75 0 0 1 20 7.75v8.5A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4zm8.75 1.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+    </svg>
+    Instagram
+</a>
+            </div>
+
+            <div class="hamburger" id="hamburger">☰</div>
+        </div>
+
+        <!-- Mobile Dropdown -->
+        <div class="mobile-menu" id="mobileMenu">
+                <a href="https://www.instagram.com/phase.blank" target="_blank" style="display:flex;align-items:center;gap:8px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M7.75 2C4.574 2 2 4.574 2 7.75v8.5C2 19.426 4.574 22 7.75 22h8.5C19.426 22 22 19.426 22 16.25v-8.5C22 4.574 19.426 2 16.25 2h-8.5zm0 2h8.5A3.75 3.75 0 0 1 20 7.75v8.5A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4zm8.75 1.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+    </svg>
+    Instagram
+</a>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1><a href="https://www.instagram.com/phase.blank" target="_blank" style="color:#9fb8d4;text-decoration:underline;">@phase.blank</a></h1>
+        <p>Discover useful products handpicked for you ❤️</p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-wrapper">
+        <input id="searchInput" class="search-box" placeholder="Search products...">
+    </div>
+
+    <!-- CATEGORY TABS -->
+    <div class="category-tabs">
+        <div class="tabs-container" id="tabsContainer"></div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="products" id="productGrid"></div>
+
+    <!-- PROMO BLOCK -->
+    <div class="promo-block">
+        <h3>👀 Finding these useful?</h3>
+        <p>We’ve got better deals & exclusive picks on our main store.</p>
+        <a href="https://rixsto.in" class="promo-btn">Explore RIXSTO →</a>
+    </div>
+
+    <!-- Trust Bar at bottom -->
+    <div class="trust-bar">
+        ✅ Best Deals &nbsp;&nbsp; 🚚 Fast Delivery &nbsp;&nbsp; 🔒 Secure Shopping
+    </div>
+
+    <!-- WHATSAPP -->
+    <a href="https://wa.me/9361149099" target="_blank" class="whatsapp-float">
+        💬
+    </a>
+
+    <script>
+        /* Shooting Stars */
+        const canvas = document.getElementById("starsCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resize(){
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
+
+        let stars = [];
+
+        function createStar(){
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                len: Math.random() * 70 + 15,
+                speed: Math.random() * 2 + 1,
+                angle: Math.PI / 4,
+                opacity: Math.random()
+            };
+        }
+
+        function draw(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            stars.forEach((s,i)=>{
+                ctx.beginPath();
+                ctx.moveTo(s.x, s.y);
+                ctx.lineTo(
+                    s.x - s.len * Math.cos(s.angle),
+                    s.y - s.len * Math.sin(s.angle)
+                );
+                ctx.strokeStyle = "rgba(120,120,120," + (s.opacity * 0.6 + 0.2) + ")";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                s.x += s.speed;
+                s.y += s.speed;
+
+                if(s.x > canvas.width || s.y > canvas.height){
+                    stars[i] = createStar();
+                }
+            });
+            requestAnimationFrame(draw);
+        }
+
+        setInterval(()=>{
+            stars.push(createStar());
+            if(stars.length > 18) stars.shift();
+        }, 400);
+
+        draw();
+
+        /* Your Products - with category for grouping */
+        let products = [];
+        function slugify(s){return (s||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");}
+
+        const grid = document.getElementById("productGrid");
+        const tabsContainer = document.getElementById("tabsContainer");
+        const hamburger = document.getElementById("hamburger");
+        const mobileMenu = document.getElementById("mobileMenu");
+
+        function getCategories() {
+            const categories = new Set(["Latest"]);
+            products.forEach(p => {
+                if (p.category) categories.add(p.category);
+            });
+            return Array.from(categories);
+        }
+
+        function renderTabs() {
+            tabsContainer.innerHTML = "";
+            const categories = getCategories();
+            categories.forEach(cat => {
+                const tab = document.createElement("div");
+                tab.className = "tab";
+                tab.textContent = cat;
+                if (cat === "Latest") tab.classList.add("active");
+
+                tab.addEventListener("click", () => {
+                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    filterByCategory(cat);
+                });
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function renderProducts(list){
+            grid.innerHTML="";
+            list.forEach((product,index)=>{
+                if(index===2){
+                    const promo=document.createElement("div");
+                    promo.className="product special-card";
+                    promo.innerHTML=`
+                    <img src="logo.png" style="height:180px;object-fit:contain;background:#fff;">
+                    <div class="product-title">🔥Visit Store</div>
+                    `;
+                    promo.onclick=()=>window.open("https://rixsto.in","_blank");
+                    grid.appendChild(promo);
+                }
+
+                const card=document.createElement("div");
+                card.className="product";
+                const _slug = product.slug || slugify(product.name);
+                card.onclick=()=>{ window.location.href = "/phaseblank/blogs/"+_slug+"/"; };
+                card.innerHTML=`
+                <img src="${product.image}">
+                <div class="product-title">${product.name}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterByCategory(category) {
+            let filtered = category === "Latest" ? [...products] : products.filter(p => p.category === category);
+            renderProducts(filtered);
+        }
+
+        fetch('/products/phaseblank.json')
+        .then(res => res.json())
+        .then(data => {
+            products = (data.products||[]).map(p=>({...p, slug: p.slug || slugify(p.name)}));
+
+            renderTabs();
+            renderProducts(products);
+
+            startPlaceholderTyping();
+        });
+
+        /* Search */
+        const searchInput=document.getElementById("searchInput");
+        searchInput.addEventListener("input",e=>{
+            const value=e.target.value.toLowerCase();
+            const activeTab = document.querySelector(".tab.active").textContent;
+            let baseList = activeTab === "Latest" ? products : products.filter(p => p.category === activeTab);
+            const filtered=baseList.filter(p=>p.name.toLowerCase().includes(value));
+            renderProducts(filtered);
+        });
+
+        /* Typing Placeholder */
+        let placeholderTexts = [];
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function startPlaceholderTyping() {
+            placeholderTexts = products.map(
+                p => `Search ${p.name}...`
+            );
+
+            if (!placeholderTexts.length) {
+                placeholderTexts = ["Search products..."];
+            }
+
+            typeEffect();
+        }
+
+        function typeEffect() {
+            if (
+                document.activeElement === searchInput &&
+                searchInput.value.length > 0
+            ) {
+                return;
+            }
+
+            const currentText = placeholderTexts[textIndex];
+
+            if (isDeleting) {
+                charIndex--;
+            } else {
+                charIndex++;
+            }
+
+            searchInput.setAttribute(
+                "placeholder",
+                currentText.substring(0, charIndex)
+            );
+
+            let speed = isDeleting ? 40 : 80;
+
+            if (!isDeleting && charIndex === currentText.length) {
+                speed = 1200;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % placeholderTexts.length;
+                speed = 400;
+            }
+
+            setTimeout(typeEffect, speed);
+        }
+
+        /* Hamburger Menu */
+        hamburger.addEventListener("click", function(e){
+            e.stopPropagation();
+            mobileMenu.style.display = (mobileMenu.style.display === "block") ? "none" : "block";
+        });
+
+        document.addEventListener("click", function(){
+            mobileMenu.style.display = "none";
+        });
+    </script>
+
+    <footer>
+
+        <div class="footer-bottom">
+            © 2026 RIXSTO
+        </div>
+        <!-- Affiliate Disclosure Added -->
+        <div class="disclosure" style="font-size:11px; color:#888; text-align:center; padding:12px; background:#f9f9f9;">
+            This page contains affiliate links. We may earn a commission if you make a purchase through our links at no extra cost to you.
+        </div>
+    </footer>
+</body>
+</html>

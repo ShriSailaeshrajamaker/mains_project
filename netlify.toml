@@ -1,0 +1,10 @@
+# Netlify runs this on every deploy (including every CMS publish).
+[build]
+  command = "npm run build"
+  publish = "_site"
+
+# Let /site/blogs/slug resolve without a trailing slash too.
+[[redirects]]
+  from = "/:site/blogs/:slug"
+  to = "/:site/blogs/:slug/index.html"
+  status = 200
