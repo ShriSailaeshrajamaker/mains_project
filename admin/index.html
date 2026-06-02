@@ -3,27 +3,154 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Online Finds CMS</title>
-
+  <title>RIXSTO — Content Manager</title>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
-
 <body>
-
 <script src="https://unpkg.com/decap-cms@^3/dist/decap-cms.js"></script>
-
 <script>
 if (window.netlifyIdentity) {
   window.netlifyIdentity.on("init", user => {
     if (!user) {
-      window.netlifyIdentity.on("login", () => {
-        document.location.href = "/admin/";
-      });
+      window.netlifyIdentity.on("login", () => { document.location.href = "/admin/"; });
     }
   });
 }
 </script>
 
+<script>
+/* ============================================================
+   LIVE BLOG PREVIEW
+   As the user fills a product, the right-hand pane shows the
+   actual themed blog layout for each product in the list.
+   ============================================================ */
+
+// per-site colours (mirror of _data/themes.js)
+var THEMES = {
+  onlinefinds:   { accent:"#EB5030", brand:"#0A3524", bg:"#f7f7f7", card:"#ffffff", border:"#eaeaea", text:"#222222", soft:"#555555" },
+  dailyloot:     { accent:"#ff5a5f", brand:"#ffb84d", bg:"#09090b", card:"#161618", border:"#2a2a2e", text:"#f4f4f5", soft:"#cfcfd4" },
+  justoneclick:  { accent:"#8b7355", brand:"#6b5b4d", bg:"#f7f2eb", card:"#fffdf9", border:"#d8cec3", text:"#3d352e", soft:"#6b5b4d" },
+  phaseblank:    { accent:"#6f8fb3", brand:"#9fb8d4", bg:"#0b1220", card:"#111827", border:"#263547", text:"#e5edf7", soft:"#cdd9e8" },
+  cartedupdaily: { accent:"#f97316", brand:"#0284c7", bg:"#f8fafc", card:"#ffffff", border:"#e2e8f0", text:"#1e293b", soft:"#475569" }
+};
+
+// which collection name maps to which site theme
+function siteFromCollection(name){
+  if (THEMES[name]) return name;
+  return "phaseblank";
+}
+
+function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// very small markdown -> html (paragraphs, links, bold, headings) for the preview only
+function mdToHtml(md){
+  if(!md) return "";
+  md = esc(md);
+  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  md = md.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  var blocks = md.split(/\n\n+/).map(function(b){
+    b = b.trim();
+    if(!b) return "";
+    if(b.indexOf("## ")===0) return "<h2>"+b.slice(3)+"</h2>";
+    if(b.indexOf("### ")===0) return "<h3>"+b.slice(4)+"</h3>";
+    return "<p>"+b.replace(/\n/g,"<br>")+"</p>";
+  });
+  return blocks.join("");
+}
+
+function stars(r){
+  r = parseFloat(r)||0;
+  var full=Math.floor(r), half=(r-full)>=0.5?1:0, empty=5-full-half;
+  return "★".repeat(full)+(half?"⯨":"")+"☆".repeat(empty<0?0:empty);
+}
+
+function readMins(txt){
+  var w=(txt||"").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(w/200));
+}
+
+// render ONE product as its blog
+function renderProductBlog(p, th){
+  if(!p) return "";
+  var name = esc(p.name||"Untitled product");
+  var img = p.blog_image || p.image || "";
+  var pros = (p.pros||[]).filter(Boolean);
+  var cons = (p.cons||[]).filter(Boolean);
+  var rt = readMins((p.lead||"")+" "+(p.body||"")+" "+(p.verdict||""));
+
+  var h = "";
+  h += '<div style="max-width:680px;margin:0 auto;padding:20px;font-family:system-ui,sans-serif;color:'+th.text+';">';
+  h += '<a style="color:'+th.soft+';font-weight:600;font-size:14px;text-decoration:none;">‹ Back to all finds</a>';
+  if(p.category) h += '<div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:'+th.accent+';margin:16px 0 10px;">'+esc(p.category)+'</div>';
+  h += '<h1 style="font-size:30px;line-height:1.15;font-weight:800;color:'+th.brand+';margin:0 0 14px;">'+name+' — Honest Review</h1>';
+  h += '<div style="display:flex;gap:12px;align-items:center;color:'+th.soft+';font-size:14px;font-weight:600;margin-bottom:20px;">';
+  if(parseFloat(p.rating)>0) h += '<span style="color:#f5a623;letter-spacing:2px;">'+stars(p.rating)+'</span><span>'+p.rating+' / 5</span><span>•</span>';
+  h += '<span>Updated daily</span><span>•</span><span>'+rt+' min read</span></div>';
+  if(img) h += '<div style="border-radius:14px;overflow:hidden;border:1px solid '+th.border+';margin-bottom:22px;"><img src="'+esc(img)+'" style="width:100%;height:300px;object-fit:cover;display:block;"></div>';
+  if(p.lead) h += '<p style="font-size:18px;line-height:1.7;margin-bottom:22px;">'+esc(p.lead)+'</p>';
+
+  // quick verdict box
+  h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-left:5px solid '+th.accent+';border-radius:14px;padding:20px;margin:22px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">';
+  h += '<div><div style="font-size:12px;font-weight:800;text-transform:uppercase;color:'+th.accent+';margin-bottom:6px;">⚡ Quick verdict — best price</div>';
+  h += '<div style="font-size:20px;font-weight:800;color:'+th.brand+';">'+name+'</div>';
+  if(p.price){ h += '<div style="font-size:15px;color:'+th.soft+';margin-top:6px;">Today\'s price: <b style="color:'+th.accent+';">'+esc(p.price)+'</b>'; if(p.was) h += ' <span style="text-decoration:line-through;opacity:.6;">'+esc(p.was)+'</span>'; h += '</div>'; }
+  h += '</div><a style="background:'+th.accent+';color:#fff;font-weight:700;padding:13px 22px;border-radius:11px;text-decoration:none;white-space:nowrap;">Check price →</a></div>';
+
+  if(p.body) h += '<div style="font-size:16px;line-height:1.8;margin:24px 0;">'+mdToHtml(p.body)+'</div>';
+
+  if(pros.length || cons.length){
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">';
+    if(pros.length){ h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-radius:14px;padding:18px;"><h4 style="color:#22a06b;margin:0 0 12px;">👍 What we loved</h4><ul style="list-style:none;padding:0;margin:0;">'; pros.forEach(function(x){ h += '<li style="padding-left:22px;position:relative;margin-bottom:9px;font-size:14px;">✓ '+esc(x)+'</li>'; }); h += '</ul></div>'; }
+    if(cons.length){ h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-radius:14px;padding:18px;"><h4 style="color:'+th.accent+';margin:0 0 12px;">👎 Worth knowing</h4><ul style="list-style:none;padding:0;margin:0;">'; cons.forEach(function(x){ h += '<li style="padding-left:22px;position:relative;margin-bottom:9px;font-size:14px;">✕ '+esc(x)+'</li>'; }); h += '</ul></div>'; }
+    h += '</div>';
+  }
+
+  if(p.verdict){
+    h += '<div style="border:1px solid '+th.border+';border-radius:16px;padding:26px;margin:28px 0;background:'+th.card+';">';
+    h += '<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:'+th.accent+';margin-bottom:12px;">★ Our verdict</div>';
+    h += '<div style="font-size:22px;font-weight:800;color:'+th.brand+';margin-bottom:12px;">'+name+'</div>';
+    h += '<div style="font-size:16px;color:'+th.soft+';line-height:1.7;margin-bottom:20px;">'+esc(p.verdict)+'</div>';
+    h += '<a style="background:'+th.accent+';color:#fff;font-weight:700;padding:13px 22px;border-radius:11px;text-decoration:none;">Get it at the best price →</a></div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+var BlogPreview = createClass({
+  render: function(){
+    var entry = this.props.entry;
+    var collection = this.props.collection;
+    var site = siteFromCollection(collection.get("name"));
+    var th = THEMES[site] || THEMES.phaseblank;
+
+    var data = entry.get("data");
+    var productsList = data.get("products");
+    var products = productsList ? productsList.toJS() : [];
+
+    if(!products.length){
+      return h("div", { style:{ padding:"40px", fontFamily:"system-ui", color:"#888", textAlign:"center" } },
+        "Add a product on the left — its blog preview will appear here.");
+    }
+
+    var html = '<div style="background:'+th.bg+';min-height:100%;padding:10px 0;">';
+    products.forEach(function(p, i){
+      if(i>0) html += '<hr style="border:none;border-top:8px solid '+th.border+';margin:30px 0;">';
+      html += renderProductBlog(p, th);
+    });
+    html += '</div>';
+
+    return h("div", { dangerouslySetInnerHTML: { __html: html } });
+  }
+});
+
+// register the preview for all 5 collections (guarded)
+try {
+  ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
+    CMS.registerPreviewTemplate(name, BlogPreview);
+  });
+} catch (e) {
+  console.error("Preview registration failed:", e);
+}
+</script>
 </body>
 </html>

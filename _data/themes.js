@@ -14,8 +14,8 @@ module.exports = {
     backUrl:"/@dailyloot.co", backLabel:"all finds"
   },
   justoneclick: {
-    accent:"#8b7355", brand:"#6b5b4d", bg:"#f7f2eb", card:"#fffdf9",
-    border:"#d8cec3", text:"#3d352e", soft:"#6b5b4d",
+    accent:"#b45309", brand:"#3d2c17", bg:"#f7f2eb", card:"#fffdf9",
+    border:"#d8cec3", text:"#3d352e", soft:"#7a6a58",
     backUrl:"/@just.one_click.co", backLabel:"all finds"
   },
   phaseblank: {

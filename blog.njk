@@ -118,16 +118,6 @@ permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
   </div>
   {% endif %}
 
-  <!-- Where to get it -->
-  <div class="ba-pricebox">
-    <div>
-      <div class="pb-eyebrow">👇 Where to get it</div>
-      <div class="pb-name">{{ post.name }}</div>
-      {% if post.price %}<div class="pb-price">Today's price: <b>{{ post.price }}</b>{% if post.was %}<span class="pb-was">{{ post.was }}</span>{% endif %}</div>{% endif %}
-    </div>
-    <a class="ba-btn" href="{{ post.link }}" target="_blank" rel="noopener sponsored nofollow">Check price →</a>
-  </div>
-
   <!-- Our verdict -->
   {% if post.verdict %}
   <div class="ba-verdict">

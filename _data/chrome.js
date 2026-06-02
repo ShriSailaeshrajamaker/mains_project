@@ -25,15 +25,17 @@ function extract(html) {
   const headEnd = html.indexOf("</head>");
   const head = html.slice(0, headEnd + "</head>".length);
 
-  // TOP: from <body...> up to the SEARCH section (so the blog gets the
-  // banner + navbar + hero, but NOT the search box / category tabs, which
-  // rely on storefront JS that doesn't run on the blog page).
+  // TOP: from <body...> up to the HERO section (so the blog gets the
+  // banner + navbar only; NOT the giant @handle hero, search box, or tabs,
+  // which are storefront-only. The navbar already shows the brand/handle).
   const bodyStart = html.search(/<body[^>]*>/i);
   const bodyTag = html.match(/<body[^>]*>/i)[0];
-  let cut = html.indexOf('class="search-wrapper"');
-  if (cut === -1) cut = html.indexOf('id="productGrid"'); // fallback
+  let cut = html.indexOf("<!-- HERO");
+  if (cut === -1) cut = html.indexOf('class="hero"');
+  if (cut === -1) cut = html.indexOf('class="search-wrapper"'); // fallbacks
+  if (cut === -1) cut = html.indexOf('id="productGrid"');
   let divStart = html.lastIndexOf("<div", cut);
-  let commentStart = html.lastIndexOf("<!-- SEARCH", divStart);
+  let commentStart = html.lastIndexOf("<!-- HERO", divStart);
   const topEndIdx = commentStart !== -1 ? commentStart : divStart;
   const top = html.slice(bodyStart + bodyTag.length, topEndIdx);
 
