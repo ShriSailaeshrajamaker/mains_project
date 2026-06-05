@@ -345,5 +345,108 @@ function buildPreviewUrl(site, p){
 
 })();
 </script>
+
+<script>
+/* ============================================================
+   EDITOR-PANE PREVIEW BUTTON  (reliable, no preview-pane dependency)
+   Injects a floating "Open full preview" button while editing a
+   collection. Reads the live entry from CMS.store and opens
+   preview.html in a new tab with the current product data.
+   ============================================================ */
+(function(){
+  var SITE_KEYS = ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"];
+
+  function currentSite(state){
+    try {
+      var col = state.entryDraft.getIn(["entry","collection"]);
+      if (col && SITE_KEYS.indexOf(col) !== -1) return col;
+    } catch(e){}
+    // fallback: read from the URL hash, e.g. #/collections/onlinefinds/...
+    var m = (location.hash||"").match(/collections\/([^\/]+)/);
+    if (m && SITE_KEYS.indexOf(m[1]) !== -1) return m[1];
+    return "onlinefinds";
+  }
+
+  function getProducts(state){
+    try {
+      var data = state.entryDraft.getIn(["entry","data"]);
+      if (!data) return [];
+      var list = data.get ? data.get("products") : null;
+      if (!list) return [];
+      return list.toJS ? list.toJS() : list;
+    } catch(e){ return []; }
+  }
+
+  function b64(p){
+    var json = JSON.stringify(p||{});
+    try { return btoa(unescape(encodeURIComponent(json))); } catch(e){ return btoa(json); }
+  }
+
+  function openPreview(site, products){
+    if (!products.length){ alert("Add at least one product first."); return; }
+    if (products.length === 1){
+      window.open("/preview.html?site="+encodeURIComponent(site)+"&d="+encodeURIComponent(b64(products[0])), "_blank");
+      return;
+    }
+    // multiple: show a tiny chooser
+    showChooser(site, products);
+  }
+
+  function showChooser(site, products){
+    var old = document.getElementById("rx-chooser"); if(old) old.remove();
+    var ov = document.createElement("div");
+    ov.id = "rx-chooser";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999998;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#fff;border-radius:14px;padding:22px;max-width:440px;width:90%;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);";
+    box.innerHTML = '<div style="font-weight:800;font-size:17px;margin-bottom:14px;color:#222;">Which product to preview?</div>';
+    products.forEach(function(p,i){
+      var b = document.createElement("button");
+      b.textContent = (p.name||("Product "+(i+1)));
+      b.style.cssText = "display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;border:1px solid #ddd;border-radius:9px;background:#f8f8f8;font-size:15px;font-weight:600;color:#222;cursor:pointer;";
+      b.onclick = function(){ window.open("/preview.html?site="+encodeURIComponent(site)+"&d="+encodeURIComponent(b64(p)), "_blank"); ov.remove(); };
+      box.appendChild(b);
+    });
+    var cancel = document.createElement("button");
+    cancel.textContent = "Cancel";
+    cancel.style.cssText = "margin-top:6px;padding:9px 16px;border:none;background:#eee;border-radius:8px;cursor:pointer;font-size:14px;";
+    cancel.onclick = function(){ ov.remove(); };
+    box.appendChild(cancel);
+    ov.appendChild(box);
+    ov.addEventListener("click", function(e){ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+
+  function ensureButton(){
+    // only show while editing an entry (URL contains /entries/ or /collections/.../new)
+    var editing = /collections\/[^\/]+\/(entries|new)/.test(location.hash||"");
+    var btn = document.getElementById("rx-preview-fab");
+    if (!editing){ if(btn) btn.style.display="none"; return; }
+
+    if (!btn){
+      btn = document.createElement("button");
+      btn.id = "rx-preview-fab";
+      btn.textContent = "🔍 Open full preview";
+      btn.style.cssText = "position:fixed;bottom:22px;right:22px;z-index:999990;background:#0A3524;color:#fff;border:none;padding:14px 22px;border-radius:30px;font-size:15px;font-weight:700;font-family:system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.3);";
+      btn.onmouseenter=function(){ btn.style.filter="brightness(1.15)"; };
+      btn.onmouseleave=function(){ btn.style.filter="none"; };
+      btn.onclick = function(){
+        if (!window.CMS || !CMS.store){ alert("CMS still loading, try again in a second."); return; }
+        var state = CMS.store.getState();
+        var site = currentSite(state);
+        var products = getProducts(state);
+        openPreview(site, products);
+      };
+      document.body.appendChild(btn);
+    }
+    btn.style.display = "block";
+  }
+
+  // poll for editing state (hash changes + periodic)
+  window.addEventListener("hashchange", ensureButton);
+  setInterval(ensureButton, 800);
+  setTimeout(ensureButton, 1200);
+})();
+</script>
 </body>
 </html>
