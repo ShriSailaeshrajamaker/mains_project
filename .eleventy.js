@@ -14,6 +14,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("*.jpg");         // logos
   eleventyConfig.addPassthroughCopy("*.png");         // logos / favicons
   eleventyConfig.addPassthroughCopy("*.ico");
+  // Include playground and other misc HTML files in the output
+  eleventyConfig.addPassthroughCopy("playground.html");
 
   // Your storefront HTML files (the @-prefixed ones + index.html) are copied as-is.
   // We list them explicitly so Eleventy doesn't try to treat them as templates.
