@@ -16,6 +16,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("*.ico");
   // Include playground and other misc HTML files in the output
   eleventyConfig.addPassthroughCopy("playground.html");
+  eleventyConfig.addPassthroughCopy("preview.html");  // standalone CMS preview page
 
   // Your storefront HTML files (the @-prefixed ones + index.html) are copied as-is.
   // We list them explicitly so Eleventy doesn't try to treat them as templates.
