@@ -8,3 +8,10 @@
   from = "/:site/blogs/:slug"
   to = "/:site/blogs/:slug/index.html"
   status = 200
+
+# Allow the CMS preview iframe to load the site
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    Content-Security-Policy = "frame-ancestors *"

@@ -1,6 +1,6 @@
 backend:
   name: git-gateway
-  branch: main
+  branch: develop
 
 media_folder: "images"
 public_folder: "/images"
@@ -26,7 +26,7 @@ collections:
             fields:
               # --- product card ---
               - { label: "Product name", name: name, widget: string }
-              - { label: "Card image", name: image, widget: image, required: false, hint: "Shown on the product grid. Upload or paste a URL." }
+              - { label: "Card image", name: image, widget: image-crop, required: false, hint: "Shown on the product grid. Upload or paste a URL." }
               - { label: "Category", name: category, widget: string, hint: "Used for the filter tabs, e.g. Kitchen Gadgets" }
               - { label: "Buy link (affiliate / Dukaan product URL)", name: link, widget: string, hint: "Where the BUY button in the blog points" }
               - { label: "Price (today's)", name: price, widget: string, required: false, hint: "Type it exactly as it should show, e.g. ₹1,799 (include the ₹ and commas)" }
@@ -38,7 +38,7 @@ collections:
               - { label: "── Blog content below ──", name: blog_divider, widget: hidden, default: "" }
               - { label: "Blog: slug (unique, lowercase, no spaces)", name: slug, widget: string, hint: "Used in the blog page link, e.g. egg-container-review" }
               - { label: "Blog: intro / lead", name: lead, widget: text, required: false }
-              - { label: "Blog: body image", name: blog_image, widget: image, required: false, hint: "Large image shown at the top of the blog (optional; falls back to card image)" }
+              - { label: "Blog: body image", name: blog_image, widget: image-crop, required: false, hint: "Large image shown at the top of the blog (optional; falls back to card image)" }
               - label: "Blog: main content (paragraphs, links, headings)"
                 name: body
                 widget: markdown

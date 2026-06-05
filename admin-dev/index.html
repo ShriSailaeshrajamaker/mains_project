@@ -3,54 +3,118 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>RIXSTO — Content Manager</title>
-
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-    }
-
-    .dev-banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #ff3b30;
-      color: white;
-      text-align: center;
-      padding: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      z-index: 99999;
-      box-shadow: 0 2px 10px rgba(0,0,0,.2);
-    }
-
-    .dev-watermark {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 120px;
-      font-weight: 900;
-      color: rgba(255,0,0,0.08);
-      pointer-events: none;
-      z-index: 9999;
-      user-select: none;
-      white-space: nowrap;
-    }
-  </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<style>
+  #rcrop-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:999999;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+  #rcrop-overlay.active{display:flex;}
+  #rcrop-box{background:#1a1a1a;border-radius:14px;padding:20px;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  #rcrop-header{display:flex;align-items:center;justify-content:space-between;color:#fff;font-family:system-ui,sans-serif;}
+  #rcrop-header h3{margin:0;font-size:16px;font-weight:700;}
+  #rcrop-header span{font-size:12px;color:#aaa;}
+  #rcrop-img-wrap{width:min(720px,86vw);height:min(420px,55vh);background:#111;border-radius:8px;overflow:hidden;position:relative;}
+  #rcrop-img-wrap img{display:block;max-width:100%;}
+  #rcrop-ratio-bar{display:flex;gap:8px;flex-wrap:wrap;}
+  .rcrop-rb{padding:6px 14px;border-radius:20px;border:1.5px solid #444;background:transparent;color:#ccc;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;}
+  .rcrop-rb:hover{border-color:#888;color:#fff;}
+  .rcrop-rb.active{border-color:#EB5030;background:#EB5030;color:#fff;font-weight:700;}
+  #rcrop-actions{display:flex;gap:10px;justify-content:flex-end;}
+  #rcrop-cancel{padding:10px 22px;border-radius:8px;border:1.5px solid #555;background:transparent;color:#ccc;font-size:14px;cursor:pointer;font-family:system-ui,sans-serif;}
+  #rcrop-confirm{padding:10px 22px;border-radius:8px;border:none;background:#EB5030;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;}
+  #rcrop-confirm:hover{filter:brightness(1.1);}
+</style>
 </head>
-
 <body>
 <script src="https://unpkg.com/decap-cms@^3/dist/decap-cms.js"></script>
+<script>
+// Register image-crop widget early, before CMS initializes
+window.addEventListener('DOMContentLoaded', function() {
+  var _interval = setInterval(function() {
+    if (!window.CMS || !window.createClass) return;
+    clearInterval(_interval);
+
+    var ImageCropControl = createClass({
+      getInitialState: function() { return { pv: this.props.value || '', ld: false }; },
+      componentDidUpdate: function(p) {
+        if (p.value !== this.props.value && !this.state.ld)
+          this.setState({ pv: this.props.value || '' });
+      },
+      onFile: function(e) {
+        var self = this, f = e.target.files && e.target.files[0]; if (!f) return;
+        var r = new FileReader();
+        r.onload = function(ev) {
+          self.setState({ ld: true });
+          window.rixstoCrop(ev.target.result)
+            .then(function(d) { self.setState({ pv: d, ld: false }); self.props.onChange(d); })
+            .catch(function() { self.setState({ ld: false }); });
+        };
+        r.readAsDataURL(f); e.target.value = '';
+      },
+      onUrl: function(e) { var v = e.target.value; this.setState({ pv: v }); this.props.onChange(v); },
+      onRecrop: function() {
+        var self = this, s = this.state.pv; if (!s) return;
+        window.rixstoCrop(s).then(function(d) { self.setState({ pv: d }); self.props.onChange(d); });
+      },
+      render: function() {
+        var self = this, pv = this.state.pv, ld = this.state.ld;
+        return h('div', { style: { fontFamily: 'system-ui,sans-serif' } },
+          h('div', { style: { display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' } },
+            h('input', {
+              type: 'text', placeholder: 'Paste image URL or upload below',
+              value: (pv && !pv.startsWith('data:')) ? pv : '',
+              onChange: self.onUrl,
+              style: { flex: '1', minWidth: '180px', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '13px' }
+            }),
+            h('label', {
+              style: { display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px',
+                background: '#0A3524', color: '#fff', borderRadius: '6px',
+                cursor: ld ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600',
+                whiteSpace: 'nowrap', opacity: ld ? 0.7 : 1 }
+            },
+              ld ? 'Loading...' : 'Upload & Crop',
+              h('input', { type: 'file', accept: 'image/*', onChange: self.onFile, disabled: ld, style: { display: 'none' } })
+            )
+          ),
+          pv ? h('div', { style: { position: 'relative', display: 'inline-block' } },
+            h('img', { src: pv, style: { maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: '1px solid #ddd', display: 'block' } }),
+            h('button', {
+              onClick: self.onRecrop,
+              style: { position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,.65)',
+                color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 10px',
+                fontSize: '12px', cursor: 'pointer', fontWeight: '700' }
+            }, 'Re-crop')
+          ) : null
+        );
+      }
+    });
+
+    var ImageCropPreview = createClass({
+      render: function() {
+        var v = this.props.value;
+        return v
+          ? h('img', { src: v, style: { maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' } })
+          : h('div', { style: { color: '#999', fontSize: '13px' } }, 'No image');
+      }
+    });
+
+    try {
+      CMS.registerWidget('image-crop', ImageCropControl, ImageCropPreview);
+      console.log('[Rixsto] image-crop widget registered');
+    } catch(e) {
+      console.warn('[Rixsto] image-crop registration failed:', e);
+    }
+  }, 50);
+});
+</script>
 <script>
 if (window.netlifyIdentity) {
   window.netlifyIdentity.on("init", user => {
     if (!user) {
-      window.netlifyIdentity.on("login", () => { document.location.href = "/admin/"; });
+      window.netlifyIdentity.on("login", () => {
+        window.location.reload();
+      });
     }
   });
 }
@@ -58,185 +122,155 @@ if (window.netlifyIdentity) {
 
 <script>
 /* ============================================================
-   LIVE FULL-PAGE BLOG PREVIEW  (matches blog.njk exactly)
-   - Lists every product with a "View preview" button
-   - Clicking one renders that product's FULL blog page
-     (banner + navbar + article + footer) in the site's theme,
-     using the SAME CSS/classes as blog.njk so it matches 1:1.
+   LIVE BLOG PREVIEW
+   As the user fills a product, the right-hand pane shows the
+   actual themed blog layout for each product in the list.
    ============================================================ */
 
-// per-site theme vars (mirror of _data/themes.js)
+// per-site colours (mirror of _data/themes.js)
 var THEMES = {
   onlinefinds:   { accent:"#EB5030", brand:"#0A3524", bg:"#f7f7f7", card:"#ffffff", border:"#eaeaea", text:"#222222", soft:"#555555" },
   dailyloot:     { accent:"#ff5a5f", brand:"#ffb84d", bg:"#09090b", card:"#161618", border:"#2a2a2e", text:"#f4f4f5", soft:"#cfcfd4" },
-  justoneclick:  { accent:"#b45309", brand:"#3d2c17", bg:"#f7f2eb", card:"#fffdf9", border:"#d8cec3", text:"#3d352e", soft:"#7a6a58" },
+  justoneclick:  { accent:"#8b7355", brand:"#6b5b4d", bg:"#f7f2eb", card:"#fffdf9", border:"#d8cec3", text:"#3d352e", soft:"#6b5b4d" },
   phaseblank:    { accent:"#6f8fb3", brand:"#9fb8d4", bg:"#0b1220", card:"#111827", border:"#263547", text:"#e5edf7", soft:"#cdd9e8" },
   cartedupdaily: { accent:"#f97316", brand:"#0284c7", bg:"#f8fafc", card:"#ffffff", border:"#e2e8f0", text:"#1e293b", soft:"#475569" }
 };
 
-// per-site chrome (banner/navbar/footer bits)
-var CHROME = {
-  onlinefinds:   { handle:"RIXSTO",            ig:"https://rixsto.in",                          logo:"/logo.png",         banner:"#0A3524", navbg:"#ffffff", navtext:"#0A3524", footbg:"#ffffff", foottext:"#777" },
-  dailyloot:     { handle:"@dailyloot.co",      ig:"https://www.instagram.com/dailyloot.co",      logo:"/dailyloot.jpg",    banner:"linear-gradient(90deg,#0284c7,#f97316)", navbg:"#111111", navtext:"#ffb84d", footbg:"#111111", foottext:"#b8c4d4" },
-  justoneclick:  { handle:"@just.one_click.co", ig:"https://www.instagram.com/just.one_click.co", logo:"/justoneclick.jpg", banner:"linear-gradient(90deg,#d8cec3,#c8b8a6)", navbg:"#fffdf9", navtext:"#3d2c17", footbg:"#fffdf9", foottext:"#777" },
-  phaseblank:    { handle:"@phase.blank",       ig:"https://www.instagram.com/phase.blank",       logo:"/phaseblank.jpg",   banner:"linear-gradient(90deg,#111827,#334155)", navbg:"#111827", navtext:"#9fb8d4", footbg:"#111827", foottext:"#b8c4d4" },
-  cartedupdaily: { handle:"@cartedupdaily",     ig:"https://www.instagram.com/cartedupdaily",     logo:"/cartedupdaily.jpg",banner:"linear-gradient(90deg,#0284c7,#f97316)", navbg:"#ffffff", navtext:"#0284c7", footbg:"#ffffff", foottext:"#777" }
-};
+function siteFromCollection(name){
+  if (THEMES[name]) return name;
+  return "phaseblank";
+}
 
-function siteFromCollection(name){ return THEMES[name] ? name : "phaseblank"; }
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-// markdown -> html (paragraphs, links, bold, headings) matching blog body
 function mdToHtml(md){
   if(!md) return "";
   md = esc(md);
   md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   md = md.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  return md.split(/\n\n+/).map(function(b){
-    b=b.trim(); if(!b) return "";
+  var blocks = md.split(/\n\n+/).map(function(b){
+    b = b.trim();
+    if(!b) return "";
     if(b.indexOf("## ")===0) return "<h2>"+b.slice(3)+"</h2>";
     if(b.indexOf("### ")===0) return "<h3>"+b.slice(4)+"</h3>";
     return "<p>"+b.replace(/\n/g,"<br>")+"</p>";
-  }).join("");
+  });
+  return blocks.join("");
 }
-function starHtml(r){
-  r=parseFloat(r)||0; var full=Math.floor(r), half=(r-full)>=0.5?1:0, empty=5-full-half;
+
+function stars(r){
+  r = parseFloat(r)||0;
+  var full=Math.floor(r), half=(r-full)>=0.5?1:0, empty=5-full-half;
   return "★".repeat(full)+(half?"⯨":"")+"☆".repeat(empty<0?0:empty);
 }
-function readMins(txt){ var w=(txt||"").trim().split(/\s+/).filter(Boolean).length; return Math.max(1, Math.round(w/200)); }
 
-// EXACT blog.njk stylesheet, scoped under #rixsto-preview so it matches 1:1
-var BLOG_CSS = "\n  .ba-wrap{max-width:780px;margin:0 auto;padding:18px 20px 50px;}\n  .ba-back{display:inline-flex;align-items:center;gap:7px;color:var(--soft);font-weight:600;font-size:14px;text-decoration:none;margin-bottom:26px;transition:color .2s;}\n  .ba-back:hover{color:var(--accent);}\n  .ba-cat{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}\n  .ba-title{font-size:38px;line-height:1.12;font-weight:800;color:var(--brand);letter-spacing:-0.01em;margin-bottom:18px;}\n  .ba-meta{display:flex;align-items:center;flex-wrap:wrap;gap:14px;color:var(--soft);font-size:14px;font-weight:600;margin-bottom:26px;}\n  .ba-stars{color:#f5a623;letter-spacing:2px;font-size:15px;}\n  .ba-dot{width:4px;height:4px;border-radius:50%;background:var(--soft);opacity:.5;display:inline-block;}\n  .ba-hero{border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-bottom:30px;background:var(--card);}\n  .ba-hero img{width:100%;height:380px;object-fit:cover;display:block;}\n  .ba-lead{font-size:19px;line-height:1.7;color:var(--text);margin-bottom:28px;}\n\n  /* price / verdict boxes */\n  .ba-pricebox{background:var(--card);border:1px solid var(--border);border-left:5px solid var(--accent);border-radius:16px;padding:24px 26px;margin:28px 0;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.06);}\n  .ba-pricebox .pb-eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}\n  .ba-pricebox .pb-name{font-size:21px;font-weight:800;color:var(--brand);line-height:1.25;margin-bottom:8px;}\n  .ba-pricebox .pb-price{font-size:15px;color:var(--soft);}\n  .ba-pricebox .pb-price b{color:var(--accent);font-size:18px;}\n  .ba-pricebox .pb-was{text-decoration:line-through;opacity:.6;margin-left:6px;}\n  .ba-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px 24px;border-radius:12px;text-decoration:none;white-space:nowrap;transition:transform .2s,box-shadow .2s,filter .2s;box-shadow:0 8px 22px rgba(0,0,0,.12);}\n  .ba-btn:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 12px 28px rgba(0,0,0,.18);}\n\n  .ba-body{font-size:17px;line-height:1.8;color:var(--text);margin:30px 0;}\n  .ba-body p{margin-bottom:20px;}\n  .ba-body h2{font-size:24px;color:var(--brand);font-weight:800;margin:32px 0 14px;}\n  .ba-body h3{font-size:19px;color:var(--brand);font-weight:700;margin:24px 0 10px;}\n  .ba-body a{color:var(--accent);text-decoration:underline;font-weight:600;}\n  .ba-body ul,.ba-body ol{margin:0 0 20px 22px;} .ba-body li{margin-bottom:9px;}\n  .ba-body img{max-width:100%;border-radius:12px;margin:18px 0;}\n\n  /* pros / cons */\n  .ba-pc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:30px 0;}\n  .ba-pccard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.05);}\n  .ba-pccard h4{font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}\n  .ba-pros h4{color:#22a06b;} .ba-cons h4{color:var(--accent);}\n  .ba-pccard ul{list-style:none;padding:0;margin:0;}\n  .ba-pccard li{font-size:15px;color:var(--text);opacity:.92;padding-left:26px;position:relative;margin-bottom:12px;line-height:1.5;}\n  .ba-pros li::before{content:\"\u2713\";position:absolute;left:0;color:#22a06b;font-weight:800;}\n  .ba-cons li::before{content:\"\u2715\";position:absolute;left:0;color:var(--accent);font-weight:800;}\n\n  /* verdict box */\n  .ba-verdict{border:1px solid var(--border);border-radius:18px;padding:30px;margin:34px 0;background:\n    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--card)), var(--card));box-shadow:0 8px 26px rgba(0,0,0,.08);border-left:6px solid color-mix(in srgb, var(--accent) 30%, var(--card));}\n  .ba-verdict .v-eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}\n  .ba-verdict .v-name{font-size:24px;font-weight:800;color:var(--brand);line-height:1.25;margin-bottom:14px;}\n  .ba-verdict .v-text{font-size:16px;color:var(--soft);line-height:1.7;margin-bottom:22px;}\n\n  /* related */\n  .ba-related-h{font-size:26px;font-weight:800;color:var(--brand);margin:44px 0 20px;}\n  .ba-related{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;}\n  .ba-rcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;transition:transform .2s,box-shadow .2s;display:block;}\n  .ba-rcard:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.12);}\n  .ba-rcard img{width:100%;height:150px;object-fit:cover;display:block;}\n  .ba-rcard .rc-name{padding:13px 14px;font-weight:700;color:var(--text);font-size:14px;text-align:center;}\n\n  @media(max-width:640px){\n    .ba-title{font-size:28px;}\n    .ba-hero img{height:230px;}\n    .ba-pc{grid-template-columns:1fr;}\n    .ba-pricebox{flex-direction:column;align-items:flex-start;}\n  }\n";
+function readMins(txt){
+  var w=(txt||"").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(w/200));
+}
 
-// build the article markup using the SAME classes as blog.njk
-function articleHtml(p){
+function renderProductBlog(p, th){
   if(!p) return "";
   var name = esc(p.name||"Untitled product");
   var img = p.blog_image || p.image || "";
   var pros = (p.pros||[]).filter(Boolean);
   var cons = (p.cons||[]).filter(Boolean);
   var rt = readMins((p.lead||"")+" "+(p.body||"")+" "+(p.verdict||""));
-  var rating = parseFloat(p.rating)||0;
 
-  var h = '<div class="ba-wrap">';
-  h += '<a class="ba-back" href="#">← Back</a>';
-  if(p.category) h += '<div class="ba-cat">'+esc(p.category)+'</div>';
-  h += '<h1 class="ba-title">'+name+' — Honest Review</h1>';
+  var h = "";
+  h += '<div style="max-width:680px;margin:0 auto;padding:20px;font-family:system-ui,sans-serif;color:'+th.text+';">';
+  h += '<a style="color:'+th.soft+';font-weight:600;font-size:14px;text-decoration:none;">‹ Back to all finds</a>';
+  if(p.category) h += '<div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:'+th.accent+';margin:16px 0 10px;">'+esc(p.category)+'</div>';
+  h += '<h1 style="font-size:30px;line-height:1.15;font-weight:800;color:'+th.brand+';margin:0 0 14px;">'+name+' — Honest Review</h1>';
+  h += '<div style="display:flex;gap:12px;align-items:center;color:'+th.soft+';font-size:14px;font-weight:600;margin-bottom:20px;">';
+  if(parseFloat(p.rating)>0) h += '<span style="color:#f5a623;letter-spacing:2px;">'+stars(p.rating)+'</span><span>'+p.rating+' / 5</span><span>•</span>';
+  h += '<span>Updated daily</span><span>•</span><span>'+rt+' min read</span></div>';
+  if(img) h += '<div style="border-radius:14px;overflow:hidden;border:1px solid '+th.border+';margin-bottom:22px;"><img src="'+esc(img)+'" style="width:100%;height:300px;object-fit:cover;display:block;"></div>';
+  if(p.lead) h += '<p style="font-size:18px;line-height:1.7;margin-bottom:22px;">'+esc(p.lead)+'</p>';
 
-  h += '<div class="ba-meta">';
-  if(rating>0){ h += '<span class="ba-stars">'+starHtml(rating)+'</span><span>'+rating+' / 5</span><span class="ba-dot"></span>'; }
-  h += '<span>Updated daily</span><span class="ba-dot"></span><span>'+rt+' min read</span></div>';
+  h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-left:5px solid '+th.accent+';border-radius:14px;padding:20px;margin:22px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">';
+  h += '<div><div style="font-size:12px;font-weight:800;text-transform:uppercase;color:'+th.accent+';margin-bottom:6px;">⚡ Quick verdict — best price</div>';
+  h += '<div style="font-size:20px;font-weight:800;color:'+th.brand+';">'+name+'</div>';
+  if(p.price){ h += '<div style="font-size:15px;color:'+th.soft+';margin-top:6px;">Today\'s price: <b style="color:'+th.accent+';">'+esc(p.price)+'</b>'; if(p.was) h += ' <span style="text-decoration:line-through;opacity:.6;">'+esc(p.was)+'</span>'; h += '</div>'; }
+  h += '</div><a style="background:'+th.accent+';color:#fff;font-weight:700;padding:13px 22px;border-radius:11px;text-decoration:none;white-space:nowrap;">Check price →</a></div>';
 
-  if(img) h += '<div class="ba-hero"><img src="'+esc(img)+'" alt="'+name+'"></div>';
-  if(p.lead) h += '<p class="ba-lead">'+esc(p.lead)+'</p>';
-
-  // quick verdict box
-  h += '<div class="ba-pricebox"><div>';
-  h += '<div class="pb-eyebrow">⚡ Quick verdict — best price</div>';
-  h += '<div class="pb-name">'+name+'</div>';
-  if(p.price){ h += '<div class="pb-price">'+(p.was?'<span class="pb-was">'+esc(p.was)+'</span> ':'')+'Today\'s price: <b>'+esc(p.price)+'</b></div>'; }
-  h += '</div><a class="ba-btn" href="'+esc(p.link||"#")+'" target="_blank" rel="noopener sponsored nofollow">Check price →</a></div>';
-
-  if(p.body) h += '<div class="ba-body">'+mdToHtml(p.body)+'</div>';
+  if(p.body) h += '<div style="font-size:16px;line-height:1.8;margin:24px 0;">'+mdToHtml(p.body)+'</div>';
 
   if(pros.length || cons.length){
-    h += '<div class="ba-pc">';
-    if(pros.length){ h += '<div class="ba-pccard ba-pros"><h4>👍 What we loved</h4><ul>'; pros.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h += '</ul></div>'; }
-    if(cons.length){ h += '<div class="ba-pccard ba-cons"><h4>👎 Worth knowing</h4><ul>'; cons.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h += '</ul></div>'; }
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">';
+    if(pros.length){ h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-radius:14px;padding:18px;"><h4 style="color:#22a06b;margin:0 0 12px;">👍 What we loved</h4><ul style="list-style:none;padding:0;margin:0;">'; pros.forEach(function(x){ h += '<li style="padding-left:22px;position:relative;margin-bottom:9px;font-size:14px;">✓ '+esc(x)+'</li>'; }); h += '</ul></div>'; }
+    if(cons.length){ h += '<div style="background:'+th.card+';border:1px solid '+th.border+';border-radius:14px;padding:18px;"><h4 style="color:'+th.accent+';margin:0 0 12px;">👎 Worth knowing</h4><ul style="list-style:none;padding:0;margin:0;">'; cons.forEach(function(x){ h += '<li style="padding-left:22px;position:relative;margin-bottom:9px;font-size:14px;">✕ '+esc(x)+'</li>'; }); h += '</ul></div>'; }
     h += '</div>';
   }
 
   if(p.verdict){
-    h += '<div class="ba-verdict"><div class="v-eyebrow">★ Our verdict</div>';
-    h += '<div class="v-name">'+name+'</div>';
-    h += '<div class="v-text">'+esc(p.verdict)+'</div>';
-    h += '<a class="ba-btn" href="'+esc(p.link||"#")+'" target="_blank" rel="noopener sponsored nofollow">Get it at the best price →</a></div>';
+    h += '<div style="border:1px solid '+th.border+';border-radius:16px;padding:26px;margin:28px 0;background:'+th.card+';">';
+    h += '<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:'+th.accent+';margin-bottom:12px;">★ Our verdict</div>';
+    h += '<div style="font-size:22px;font-weight:800;color:'+th.brand+';margin-bottom:12px;">'+name+'</div>';
+    h += '<div style="font-size:16px;color:'+th.soft+';line-height:1.7;margin-bottom:20px;">'+esc(p.verdict)+'</div>';
+    h += '<a style="background:'+th.accent+';color:#fff;font-weight:700;padding:13px 22px;border-radius:11px;text-decoration:none;">Get it at the best price →</a></div>';
   }
   h += '</div>';
   return h;
 }
 
-function topChrome(site){
-  var c = CHROME[site]||CHROME.phaseblank;
-  var s = '<div style="background:'+c.banner+';color:#fff;text-align:center;padding:10px;font-size:14px;">🚀 100+ Curated Picks → <a href="https://rixsto.in" style="color:#22c55e;text-decoration:none;font-weight:600;">Explore RIXSTO</a></div>';
-  s += '<div style="background:'+c.navbg+';border-bottom:1px solid var(--border);"><div style="max-width:1200px;margin:auto;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">';
-  s += '<div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:'+c.navtext+';"><img src="'+c.logo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'"><span>'+esc(c.handle)+'</span></div>';
-  s += '<a href="'+c.ig+'" style="color:'+c.navtext+';text-decoration:none;font-weight:600;font-size:14px;">Instagram</a></div></div>';
-  return s;
-}
-function bottomChrome(site){
-  var c = CHROME[site]||CHROME.phaseblank;
-  var s = '<div style="max-width:800px;margin:30px auto;background:var(--card);border:1px solid var(--border);padding:25px;text-align:center;border-radius:12px;"><h3 style="color:var(--brand);margin:0 0 8px;">👀 Finding these useful?</h3><p style="color:var(--soft);margin:0 0 14px;">We\'ve got better deals &amp; exclusive picks on our main store.</p><a href="https://rixsto.in" style="display:inline-block;background:var(--accent);color:#fff;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Explore RIXSTO →</a></div>';
-  s += '<div style="background:'+c.footbg+';padding:15px 20px;text-align:center;font-size:13px;color:'+c.foottext+';border-top:1px solid var(--border);">✅ Best Deals &nbsp;&nbsp; 🚚 Fast Delivery &nbsp;&nbsp; 🔒 Secure Shopping</div>';
-  s += '<div style="background:'+c.footbg+';border-top:1px solid var(--border);"><div style="text-align:center;font-size:12px;color:'+c.foottext+';padding:15px;">© 2026 RIXSTO</div>';
-  s += '<div style="font-size:11px;color:#888;text-align:center;padding:12px;">This page contains affiliate links. We may earn a commission if you make a purchase through our links at no extra cost to you.</div></div>';
-  return s;
-}
+// Site base URLs for live preview
+var SITE_BASE_URLS = {
+  onlinefinds:   "https://onlinefinds.rixsto.in",
+  dailyloot:     "https://dailyloot.co",
+  justoneclick:  "https://just.one-click.co",
+  phaseblank:    "https://phase.blank",
+  cartedupdaily: "https://cartedupdaily.com"
+};
 
-// full themed page for one product
-function fullPage(site, p){
-  var th = THEMES[site]||THEMES.phaseblank;
-  var vars = '--accent:'+th.accent+';--brand:'+th.brand+';--bg:'+th.bg+';--card:'+th.card+';--border:'+th.border+';--text:'+th.text+';--soft:'+th.soft+';';
-  var html = '<div id="rixsto-preview" style="'+vars+'background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100%;">';
-  html += '<style>'+BLOG_CSS+'</style>';
-  html += topChrome(site);
-  html += articleHtml(p);
-  html += bottomChrome(site);
-  html += '</div>';
-  return html;
-}
+var SITE_FILE = { onlinefinds:"index", dailyloot:"dailyloot", justoneclick:"justoneclick", phaseblank:"phaseblank", cartedupdaily:"cartedupdaily" };
 
-// the product list with "View preview" buttons
-function listHtml(site, products, openIndex){
-  var th = THEMES[site]||THEMES.phaseblank;
-  var s = '<div style="font-family:system-ui,sans-serif;padding:18px;background:#f4f4f5;min-height:100%;">';
-  s += '<div style="font-size:13px;color:#666;margin-bottom:14px;">'+products.length+' product(s). Click “View preview” to see the full blog page.</div>';
-  products.forEach(function(p,i){
-    var open = (i===openIndex);
-    s += '<div style="border:1px solid #ddd;border-radius:10px;margin-bottom:12px;overflow:hidden;background:#fff;">';
-    s += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;gap:12px;">';
-    s += '<div style="font-weight:700;color:#222;">'+esc(p.name||"(unnamed product)")+'</div>';
-    s += '<button data-idx="'+i+'" class="rx-view" style="background:'+th.accent+';color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap;">'+(open?"Hide preview":"View preview")+'</button>';
-    s += '</div>';
-    if(open){ s += '<div style="border-top:1px solid #eee;">'+fullPage(site,p)+'</div>'; }
-    s += '</div>';
-  });
-  s += '</div>';
-  return s;
+function buildPreviewUrl(site, p){
+  // encode the product as base64 JSON so the standalone page can render it (even unsaved)
+  var json = JSON.stringify(p || {});
+  var b64;
+  try { b64 = btoa(unescape(encodeURIComponent(json))); } catch(e){ b64 = btoa(json); }
+  return "/preview.html?site=" + encodeURIComponent(site) + "&d=" + encodeURIComponent(b64);
 }
 
 var BlogPreview = createClass({
-  getInitialState: function(){ return { open: -1 }; },
-  componentDidUpdate: function(){ this._wire(); },
-  componentDidMount: function(){ this._wire(); },
-  _wire: function(){
-    var self = this;
-    var root = this._root;
-    if(!root) return;
-    var btns = root.querySelectorAll(".rx-view");
-    btns.forEach(function(b){
-      b.onclick = function(){
-        var idx = parseInt(b.getAttribute("data-idx"),10);
-        self.setState({ open: (self.state.open===idx ? -1 : idx) });
-      };
-    });
-  },
   render: function(){
-    var self = this;
     var collection = this.props.collection;
     var site = siteFromCollection(collection.get("name"));
+    var th = THEMES[site] || THEMES.phaseblank;
     var data = this.props.entry.get("data");
     var list = data.get("products");
     var products = list ? list.toJS() : [];
 
     if(!products.length){
-      return h("div", { style:{ padding:"40px", fontFamily:"system-ui", color:"#888", textAlign:"center" } },
-        "Add a product on the left — it will appear here with a “View preview” button.");
+      return h("div", { style:{ padding:"50px 30px", fontFamily:"system-ui", color:"#888", textAlign:"center" } },
+        h("div", { style:{ fontSize:"38px", marginBottom:"10px" } }, "\ud83d\udc41\ufe0f"),
+        h("div", { style:{ fontSize:"15px" } }, "Add a product on the left, then click \u201cOpen full preview\u201d to see its blog page.")
+      );
     }
-    return h("div", {
-      ref: function(el){ self._root = el; },
-      dangerouslySetInnerHTML: { __html: listHtml(site, products, this.state.open) }
+
+    var rows = products.map(function(p, i){
+      var name = (p && p.name) ? p.name : "(unnamed product)";
+      return h("div", {
+        key: i,
+        style:{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px",
+                padding:"14px 16px", border:"1px solid #e2e2e2", borderRadius:"10px",
+                marginBottom:"10px", background:"#fff" }
+      },
+        h("div", { style:{ fontWeight:700, color:"#222", fontSize:"15px" } }, name),
+        h("button", {
+          onClick: function(){ window.open(buildPreviewUrl(site, p), "_blank"); },
+          style:{ background: th.accent, color:"#fff", border:"none", padding:"10px 18px",
+                  borderRadius:"8px", fontWeight:700, fontSize:"14px", cursor:"pointer", whiteSpace:"nowrap" }
+        }, "\ud83d\udd0d Open full preview")
+      );
     });
+
+    return h("div", { style:{ padding:"20px", fontFamily:"system-ui,sans-serif", background:"#f4f4f5", minHeight:"100%" } },
+      h("div", { style:{ fontSize:"13px", color:"#666", marginBottom:"14px", lineHeight:1.5 } },
+        "Click \u201cOpen full preview\u201d on any product to see its blog page exactly as it will publish \u2014 opens in a new tab."),
+      h("div", null, rows)
+    );
   }
 });
 
@@ -244,8 +278,62 @@ try {
   ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
     CMS.registerPreviewTemplate(name, BlogPreview);
   });
-} catch(e){ console.error("Preview registration failed:", e); }
+} catch (e) {
+  console.error("Preview registration failed:", e);
+}
+</script>
 
+<!-- RIXSTO CROP MODAL -->
+<div id="rcrop-overlay">
+  <div id="rcrop-box">
+    <div id="rcrop-header"><h3>&#x2702;&#xFE0F; Crop Image</h3><span>Drag &middot; Handles to resize</span></div>
+    <div id="rcrop-img-wrap"><img id="rcrop-img" src=""></div>
+    <div id="rcrop-ratio-bar">
+      <button class="rcrop-rb active" data-ratio="1">1:1 Square</button>
+      <button class="rcrop-rb" data-ratio="1.3333">4:3</button>
+      <button class="rcrop-rb" data-ratio="1.7778">16:9</button>
+      <button class="rcrop-rb" data-ratio="0.75">3:4 Portrait</button>
+      <button class="rcrop-rb" data-ratio="free">Free</button>
+    </div>
+    <div id="rcrop-actions">
+      <button id="rcrop-cancel">Cancel</button>
+      <button id="rcrop-confirm">&#x2713; Use Cropped Image</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var ci=null,pr=null,pj=null;
+  var ov=document.getElementById("rcrop-overlay");
+  var img=document.getElementById("rcrop-img");
+  var ok=document.getElementById("rcrop-confirm");
+  var cx=document.getElementById("rcrop-cancel");
+  var rb=document.getElementById("rcrop-ratio-bar");
+  function dc(){ if(ci){ci.destroy();ci=null;} }
+  window.rixstoCrop=function(dataUrl){
+    return new Promise(function(res,rej){
+      pr=res; pj=rej; img.src=""; ov.classList.add("active");
+      img.onload=function(){
+        dc(); ci=new Cropper(img,{aspectRatio:1,viewMode:1,autoCropArea:0.85,movable:true,zoomable:true,scalable:false,rotatable:false});
+        document.querySelectorAll(".rcrop-rb").forEach(function(b,i){b.classList.toggle("active",i===0);});
+      }; img.src=dataUrl;
+    });
+  };
+  rb.addEventListener("click",function(e){
+    var b=e.target.closest(".rcrop-rb"); if(!b||!ci) return;
+    document.querySelectorAll(".rcrop-rb").forEach(function(x){x.classList.remove("active");}); b.classList.add("active");
+    ci.setAspectRatio(b.dataset.ratio==="free"?NaN:parseFloat(b.dataset.ratio));
+  });
+  ok.addEventListener("click",function(){
+    if(!ci||!pr) return;
+    ci.getCroppedCanvas({maxWidth:1400,maxHeight:1400,imageSmoothingQuality:"high"}).toBlob(function(blob){
+      var r=new FileReader(); r.onload=function(){ dc(); ov.classList.remove("active"); var fn=pr; pr=null; fn(r.result); }; r.readAsDataURL(blob);
+    },"image/jpeg",0.92);
+  });
+  cx.addEventListener("click",function(){ dc(); ov.classList.remove("active"); if(pj){var f=pj;pj=null;f(new Error("cancelled"));} });
+  ov.addEventListener("click",function(e){if(e.target===ov)cx.click();});
+
+})();
 </script>
 </body>
 </html>
