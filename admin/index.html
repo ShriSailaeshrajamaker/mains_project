@@ -233,54 +233,64 @@ function buildPreviewUrl(site, p){
   return "/preview.html?site=" + encodeURIComponent(site) + "&d=" + encodeURIComponent(b64);
 }
 
-var BlogPreview = createClass({
-  render: function(){
-    var collection = this.props.collection;
-    var site = siteFromCollection(collection.get("name"));
-    var th = THEMES[site] || THEMES.phaseblank;
-    var data = this.props.entry.get("data");
-    var list = data.get("products");
-    var products = list ? list.toJS() : [];
+// Wait for Decap CMS to be ready (same pattern as the crop widget),
+// because createClass / CMS only exist once the CMS bundle has initialised.
+(function registerBlogPreview(){
+  var _pv = setInterval(function(){
+    if (!window.CMS || !window.createClass) return;   // keep waiting
+    clearInterval(_pv);
 
-    if(!products.length){
-      return h("div", { style:{ padding:"50px 30px", fontFamily:"system-ui", color:"#888", textAlign:"center" } },
-        h("div", { style:{ fontSize:"38px", marginBottom:"10px" } }, "\ud83d\udc41\ufe0f"),
-        h("div", { style:{ fontSize:"15px" } }, "Add a product on the left, then click \u201cOpen full preview\u201d to see its blog page.")
-      );
-    }
+    var BlogPreview = createClass({
+      render: function(){
+        var collection = this.props.collection;
+        var site = siteFromCollection(collection.get("name"));
+        var th = THEMES[site] || THEMES.phaseblank;
+        var data = this.props.entry.get("data");
+        var list = data.get("products");
+        var products = list ? list.toJS() : [];
 
-    var rows = products.map(function(p, i){
-      var name = (p && p.name) ? p.name : "(unnamed product)";
-      return h("div", {
-        key: i,
-        style:{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px",
-                padding:"14px 16px", border:"1px solid #e2e2e2", borderRadius:"10px",
-                marginBottom:"10px", background:"#fff" }
-      },
-        h("div", { style:{ fontWeight:700, color:"#222", fontSize:"15px" } }, name),
-        h("button", {
-          onClick: function(){ window.open(buildPreviewUrl(site, p), "_blank"); },
-          style:{ background: th.accent, color:"#fff", border:"none", padding:"10px 18px",
-                  borderRadius:"8px", fontWeight:700, fontSize:"14px", cursor:"pointer", whiteSpace:"nowrap" }
-        }, "\ud83d\udd0d Open full preview")
-      );
+        if(!products.length){
+          return h("div", { style:{ padding:"50px 30px", fontFamily:"system-ui", color:"#888", textAlign:"center" } },
+            h("div", { style:{ fontSize:"38px", marginBottom:"10px" } }, "\ud83d\udc41\ufe0f"),
+            h("div", { style:{ fontSize:"15px" } }, "Add a product on the left, then click \u201cOpen full preview\u201d to see its blog page.")
+          );
+        }
+
+        var rows = products.map(function(p, i){
+          var name = (p && p.name) ? p.name : "(unnamed product)";
+          return h("div", {
+            key: i,
+            style:{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px",
+                    padding:"14px 16px", border:"1px solid #e2e2e2", borderRadius:"10px",
+                    marginBottom:"10px", background:"#fff" }
+          },
+            h("div", { style:{ fontWeight:700, color:"#222", fontSize:"15px" } }, name),
+            h("button", {
+              onClick: function(){ window.open(buildPreviewUrl(site, p), "_blank"); },
+              style:{ background: th.accent, color:"#fff", border:"none", padding:"10px 18px",
+                      borderRadius:"8px", fontWeight:700, fontSize:"14px", cursor:"pointer", whiteSpace:"nowrap" }
+            }, "\ud83d\udd0d Open full preview")
+          );
+        });
+
+        return h("div", { style:{ padding:"20px", fontFamily:"system-ui,sans-serif", background:"#f4f4f5", minHeight:"100%" } },
+          h("div", { style:{ fontSize:"13px", color:"#666", marginBottom:"14px", lineHeight:1.5 } },
+            "Click \u201cOpen full preview\u201d on any product to see its blog page exactly as it will publish \u2014 opens in a new tab."),
+          h("div", null, rows)
+        );
+      }
     });
 
-    return h("div", { style:{ padding:"20px", fontFamily:"system-ui,sans-serif", background:"#f4f4f5", minHeight:"100%" } },
-      h("div", { style:{ fontSize:"13px", color:"#666", marginBottom:"14px", lineHeight:1.5 } },
-        "Click \u201cOpen full preview\u201d on any product to see its blog page exactly as it will publish \u2014 opens in a new tab."),
-      h("div", null, rows)
-    );
-  }
-});
-
-try {
-  ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
-    CMS.registerPreviewTemplate(name, BlogPreview);
-  });
-} catch (e) {
-  console.error("Preview registration failed:", e);
-}
+    try {
+      ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
+        CMS.registerPreviewTemplate(name, BlogPreview);
+      });
+      console.log("[Rixsto] blog preview (Open full preview buttons) registered");
+    } catch (e) {
+      console.error("[Rixsto] Preview registration failed:", e);
+    }
+  }, 50);
+})();
 </script>
 
 <!-- RIXSTO CROP MODAL -->
