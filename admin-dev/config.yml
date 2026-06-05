@@ -38,7 +38,7 @@ collections:
               - { label: "── Blog content below ──", name: blog_divider, widget: hidden, default: "" }
               - { label: "Blog: slug (unique, lowercase, no spaces)", name: slug, widget: string, hint: "Used in the blog page link, e.g. egg-container-review" }
               - { label: "Blog: intro / lead", name: lead, widget: text, required: false }
-              - { label: "Blog: body image", name: blog_image, widget: image, required: false, hint: "Large image shown at the top of the blog. It's auto-fitted to a wide banner, so any photo works — for best results upload a wide/landscape image (tall portrait photos will show their centre)." }
+              - { label: "Blog: body image", name: blog_image, widget: image, required: false, hint: "Large image shown at the top of the blog (optional; falls back to card image)" }
               - label: "Blog: main content (paragraphs, links, headings)"
                 name: body
                 widget: markdown

@@ -19,19 +19,10 @@ function slugify(s) {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-// estimate read time from lead + body + verdict (~200 words/min, min 1)
-function readTime() {
-  return function (txt) {
-    const words = (txt || "").trim().split(/\s+/).filter(Boolean).length;
-    return Math.max(1, Math.round(words / 200));
-  };
-}
-
 module.exports = function () {
   const all = [];
   const dir = path.join(__dirname, "..", "products");
   const seenPerSite = {}; // track slugs per site to avoid collisions
-  const calcRead = readTime();
 
   for (const [site, meta] of Object.entries(SITES)) {
     const fp = path.join(dir, meta.file);
@@ -55,38 +46,31 @@ module.exports = function () {
       while (seenPerSite[site][slug]) { slug = base + "-" + n; n++; }
       seenPerSite[site][slug] = true;
 
-      const ratingNum = parseFloat(p.rating);
+      const rating = p.rating || p.stars || p.review_rating || p.reviewScore || null;
+      const reviews = p.reviews || p.reviewsCount || p.review_count || p.reviewCount || null;
+      const readMins = p.readMins || p.read_mins || p.readMinutes || p.read_minutes || Math.max(1, Math.round(((p.body || "").split(/\s+/).filter(Boolean).length) / 200));
+
       all.push({
         site,
         siteLabel: meta.label,
         slug,
         name: p.name,
         image: p.image || "",
-        blogImage: p.blog_image || p.image || "",
+        blogImage: p.blog_image || p.blog_image_url || p.image || "",
         category: p.category || "",
         link: p.link || "#",
-        price: p.price || "",
-        was: p.was || "",
-        rating: (!isNaN(ratingNum) && ratingNum > 0) ? ratingNum : 0,
         lead: p.lead || "",
         body: p.body || "",
-        readMins: calcRead((p.lead || "") + " " + (p.body || "") + " " + (p.verdict || "")),
+        price: p.price || null,
+        was: p.was || null,
+        rating: rating,
+        reviews: reviews,
+        readMins: readMins,
         pros: (p.pros || []).filter(Boolean),
         cons: (p.cons || []).filter(Boolean),
         verdict: p.verdict || ""
       });
     });
   }
-
-  // attach up to 3 "related" products from the SAME site (for "More finds you'll like")
-  const bySite = {};
-  all.forEach(b => { (bySite[b.site] = bySite[b.site] || []).push(b); });
-  all.forEach(b => {
-    b.related = (bySite[b.site] || [])
-      .filter(x => x.slug !== b.slug)
-      .slice(0, 3)
-      .map(x => ({ name: x.name, slug: x.slug, image: x.image, site: x.site }));
-  });
-
   return all;
 };

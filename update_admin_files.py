@@ -1,4 +1,87 @@
-<!doctype html>
+from pathlib import Path
+base = Path(__file__).resolve().parent
+config = '''backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images"
+public_folder: "/images"
+
+# Reusable field set: each PRODUCT now also carries its BLOG content.
+# Adding a product = filling its card details + its blog (lead, pros, cons, images, buy link).
+# The website turns each entry into its own blog page automatically.
+
+collections:
+
+  - name: "onlinefinds"
+    label: "① Online Finds"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/index.json"
+        fields: &product_blog_fields
+          - label: Products
+            name: products
+            label_singular: "Product"
+            widget: list
+            summary: "{{fields.name}}  —  {{fields.category}}"
+            fields:
+              # --- product card ---
+              - { label: "Product name", name: name, widget: string }
+              - { label: "Card image", name: image, widget: image, required: false, hint: "Shown on the product grid. Upload or paste a URL." }
+              - { label: "Category", name: category, widget: string, hint: "Used for the filter tabs, e.g. Kitchen Gadgets" }
+              - { label: "Buy link (affiliate / Dukaan product URL)", name: link, widget: string, hint: "Where the BUY button in the blog points" }
+              - { label: "Price (today's)", name: price, widget: string, required: false, hint: "Type it exactly as it should show, e.g. ₹1,799 (include the ₹ and commas)" }
+              - { label: "Original price (struck-through)", name: was, widget: string, required: false, hint: "e.g. ₹3,999 — optional, shows the discount. Include ₹ and commas." }
+              - { label: "Rating (0–5)", name: rating, widget: number, required: false, value_type: float, min: 0, max: 5, step: 0.5, hint: "Shows star rating in the blog header. Leave blank to hide." }
+              # --- blog / review content ---
+              - { label: "── Blog content below ──", name: blog_divider, widget: hidden, default: "" }
+              - { label: "Blog: slug (unique, lowercase, no spaces)", name: slug, widget: string, hint: "Used in the blog page link, e.g. egg-container-review" }
+              - { label: "Blog: intro / lead", name: lead, widget: text, required: false }
+              - { label: "Blog: body image", name: blog_image, widget: image, required: false, hint: "Large image shown at the top of the blog. It's auto-fitted to a wide banner, so any photo works — for best results upload a wide/landscape image (tall portrait photos will show their centre)." }
+              - label: "Blog: main content (paragraphs, links, headings)"
+                name: body
+                widget: markdown
+                required: false
+                hint: "Write freely — paragraphs, links, bold, headings. This is the main article. Use the link button in the toolbar to add links between paragraphs."
+              - { label: "Blog: pros", name: pros, widget: list, required: false, field: { label: Pro, name: item, widget: string } }
+              - { label: "Blog: cons", name: cons, widget: list, required: false, field: { label: Con, name: item, widget: string } }
+              - { label: "Blog: verdict", name: verdict, widget: text, required: false }
+
+  - name: "dailyloot"
+    label: "② DailyLoot"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/dailyloot.json"
+        fields: *product_blog_fields
+
+  - name: "justoneclick"
+    label: "③ Just One Click"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/justoneclick.json"
+        fields: *product_blog_fields
+
+  - name: "phaseblank"
+    label: "④ Phase Blank"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/phaseblank.json"
+        fields: *product_blog_fields
+
+  - name: "cartedupdaily"
+    label: "⑤ CartedUpDaily"
+    files:
+      - label: "Products & Blogs"
+        name: "products"
+        file: "products/cartedupdaily.json"
+        fields: *product_blog_fields
+'''
+
+html = '''<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -34,6 +117,7 @@ var THEMES = {
   cartedupdaily: { accent:"#f97316", brand:"#0284c7", bg:"#f8fafc", card:"#ffffff", border:"#e2e8f0", text:"#1e293b", soft:"#475569" }
 };
 
+// which collection name maps to which site theme
 function siteFromCollection(name){
   if (THEMES[name]) return name;
   return "phaseblank";
@@ -41,6 +125,7 @@ function siteFromCollection(name){
 
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
+// very small markdown -> html (paragraphs, links, bold, headings) for the preview only
 function mdToHtml(md){
   if(!md) return "";
   md = esc(md);
@@ -67,6 +152,7 @@ function readMins(txt){
   return Math.max(1, Math.round(w/200));
 }
 
+// render ONE product as its blog
 function renderProductBlog(p, th){
   if(!p) return "";
   var name = esc(p.name||"Untitled product");
@@ -112,36 +198,6 @@ function renderProductBlog(p, th){
   return h;
 }
 
-
-var CHROME = {
-  onlinefinds:   { handle:"RIXSTO",             ig:"https://rixsto.in",                          logo:"/logo.png",        banner:"#0A3524", navbg:"#ffffff", navtext:"#0A3524", footbg:"#ffffff", foottext:"#777" },
-  dailyloot:     { handle:"@dailyloot.co",        ig:"https://www.instagram.com/dailyloot.co",      logo:"/dailyloot.jpg",    banner:"linear-gradient(90deg,#0284c7,#f97316)", navbg:"#111111", navtext:"#ffb84d", footbg:"#111111", foottext:"#b8c4d4" },
-  justoneclick:  { handle:"@just.one_click.co",   ig:"https://www.instagram.com/just.one_click.co", logo:"/justoneclick.jpg", banner:"linear-gradient(90deg,#d8cec3,#c8b8a6)", navbg:"#fffdf9", navtext:"#3d2c17", footbg:"#fffdf9", foottext:"#777" },
-  phaseblank:    { handle:"@phase.blank",         ig:"https://www.instagram.com/phase.blank",       logo:"/phaseblank.jpg",   banner:"linear-gradient(90deg,#111827,#334155)", navbg:"#111827", navtext:"#9fb8d4", footbg:"#111827", foottext:"#b8c4d4" },
-  cartedupdaily: { handle:"@cartedupdaily",       ig:"https://www.instagram.com/cartedupdaily",     logo:"/cartedupdaily.jpg",navbg:"#ffffff", banner:"linear-gradient(90deg,#0284c7,#f97316)", navtext:"#0284c7", footbg:"#ffffff", foottext:"#777" }
-};
-
-function topChrome(site, th){
-  var c = CHROME[site] || CHROME.phaseblank;
-  var s = "";
-  s += '<div style="background:'+c.banner+';color:#fff;text-align:center;padding:10px;font-size:14px;">\u{1F680} 100+ Curated Picks \u2192 <a href="https://rixsto.in" style="color:#22c55e;text-decoration:none;font-weight:600;">Explore RIXSTO</a></div>';
-  s += '<div style="background:'+c.navbg+';border-bottom:1px solid '+th.border+';"><div style="max-width:1200px;margin:auto;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">';
-  s += '<div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:'+c.navtext+';"><img src="'+c.logo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'"><span>'+esc(c.handle)+'</span></div>';
-  s += '<a href="'+c.ig+'" style="color:'+c.navtext+';text-decoration:none;font-weight:600;font-size:14px;">Instagram</a>';
-  s += '</div></div>';
-  return s;
-}
-
-function bottomChrome(site, th){
-  var c = CHROME[site] || CHROME.phaseblank;
-  var s = "";
-  s += '<div style="max-width:800px;margin:30px auto;background:'+th.card+';border:1px solid '+th.border+';padding:25px;text-align:center;border-radius:12px;"><h3 style="color:'+th.brand+';margin:0 0 8px;">\u{1F440} Finding these useful?</h3><p style="color:'+th.soft+';margin:0 0 14px;">We\'ve got better deals &amp; exclusive picks on our main store.</p><a href="https://rixsto.in" style="display:inline-block;background:'+th.accent+';color:#fff;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Explore RIXSTO \u2192</a></div>';
-  s += '<div style="background:'+c.footbg+';padding:15px 20px;text-align:center;font-size:13px;color:'+c.foottext+';border-top:1px solid '+th.border+';">\u2705 Best Deals &nbsp;&nbsp; \u{1F69A} Fast Delivery &nbsp;&nbsp; \u{1F512} Secure Shopping</div>';
-  s += '<div style="background:'+c.footbg+';border-top:1px solid '+th.border+';"><div style="text-align:center;font-size:12px;color:'+c.foottext+';padding:15px;">\u00A9 2026 RIXSTO</div>';
-  s += '<div style="font-size:11px;color:#888;text-align:center;padding:12px;">This page contains affiliate links. We may earn a commission if you make a purchase through our links at no extra cost to you.</div></div>';
-  return s;
-}
-
 var BlogPreview = createClass({
   render: function(){
     var entry = this.props.entry;
@@ -159,18 +215,17 @@ var BlogPreview = createClass({
     }
 
     var html = '<div style="background:'+th.bg+';min-height:100%;padding:10px 0;">';
-    html += topChrome(site, th);
     products.forEach(function(p, i){
       if(i>0) html += '<hr style="border:none;border-top:8px solid '+th.border+';margin:30px 0;">';
       html += renderProductBlog(p, th);
     });
-    html += bottomChrome(site, th);
     html += '</div>';
 
     return h("div", { dangerouslySetInnerHTML: { __html: html } });
   }
 });
 
+// register the preview for all 5 collections (guarded)
 try {
   ["onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
     CMS.registerPreviewTemplate(name, BlogPreview);
@@ -181,3 +236,14 @@ try {
 </script>
 </body>
 </html>
+'''
+
+paths = [base / 'admin' / 'config.yml', base / 'admin-dev' / 'config.yml', base / 'admin-qa' / 'config.yml']
+for p in paths:
+    p.write_text(config, encoding='utf-8')
+
+paths = [base / 'admin' / 'index.html', base / 'admin-dev' / 'index.html', base / 'admin-qa' / 'index.html']
+for p in paths:
+    p.write_text(html, encoding='utf-8')
+
+print('Updated admin config and index files.')

@@ -55,7 +55,7 @@ permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
 
   /* verdict box */
   .ba-verdict{border:1px solid var(--border);border-radius:18px;padding:30px;margin:34px 0;background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--card)), var(--card));}
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--card)), var(--card));box-shadow:0 8px 26px rgba(0,0,0,.08);border-left:6px solid color-mix(in srgb, var(--accent) 30%, var(--card));}
   .ba-verdict .v-eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}
   .ba-verdict .v-name{font-size:24px;font-weight:800;color:var(--brand);line-height:1.25;margin-bottom:14px;}
   .ba-verdict .v-text{font-size:16px;color:var(--soft);line-height:1.7;margin-bottom:22px;}
@@ -77,25 +77,34 @@ permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
 </style>
 
 <div class="ba-wrap">
-  <a class="ba-back" href="{{ th.backUrl }}">‹ Back to {{ th.backLabel }}</a>
+  <a class="ba-back" href="javascript:history.back()" onclick="if (window.history.length > 1) { history.back(); return false; }">← Back</a>
 
   {% if post.category %}<div class="ba-cat">{{ post.category }}</div>{% endif %}
   <h1 class="ba-title">{{ post.name }} — Honest Review</h1>
 
   <div class="ba-meta">
-    {% if post.rating %}
-      {%- set full = (post.rating | round(0, 'floor')) | int -%}
-      {%- set half = 1 if (post.rating - full) >= 0.5 else 0 -%}
+    {%- set rating = post.rating or post.stars or post.review_rating or post.reviewScore -%}
+    {%- if rating -%}
+      {%- set full = (rating | round(0, 'floor')) | int -%}
+      {%- set half = 1 if (rating - full) >= 0.5 else 0 -%}
       <span class="ba-stars">{% for i in range(0, full) %}★{% endfor %}{% if half %}⯨{% endif %}{% for i in range(0, 5 - full - half) %}☆{% endfor %}</span>
-      <span>{{ post.rating }} / 5</span>
+      <span>{{ rating }} / 5</span>
+      {%- set reviews = post.reviews or post.reviewsCount or post.review_count or post.reviewCount -%}
+      {% if reviews %}<span class="ba-dot"></span><span>{{ reviews }} reviews</span>{% endif %}
       <span class="ba-dot"></span>
-    {% endif %}
+    {%- endif -%}
     <span>Updated daily</span>
     <span class="ba-dot"></span>
-    <span>{{ post.readMins }} min read</span>
+    {%- set read = post.readMins or post.read_mins or post.readMinutes or post.read_minutes -%}
+    {% if read %}
+      <span>{{ read }} min read</span>
+    {% else %}
+      <span>— min read</span>
+    {% endif %}
   </div>
 
-  {% if post.blogImage %}<div class="ba-hero"><img src="{{ post.blogImage }}" alt="{{ post.name }}"></div>{% endif %}
+  {% set blogImg = post.blogImage or post.blog_image or post.blog_image_url or post.image %}
+  {% if blogImg %}<div class="ba-hero"><img src="{{ blogImg }}" alt="{{ post.name }}"></div>{% endif %}
 
   {% if post.lead %}<p class="ba-lead">{{ post.lead }}</p>{% endif %}
 
@@ -104,7 +113,9 @@ permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
     <div>
       <div class="pb-eyebrow">⚡ Quick verdict — best price</div>
       <div class="pb-name">{{ post.name }}</div>
-      {% if post.price %}<div class="pb-price">Today's price: <b>{{ post.price }}</b>{% if post.was %}<span class="pb-was">{{ post.was }}</span>{% endif %}</div>{% endif %}
+      {% if post.price %}
+        <div class="pb-price">{% if post.was %}<span class="pb-was">{{ post.was }}</span>{% endif %} Today's price: <b>{{ post.price }}</b></div>
+      {% endif %}
     </div>
     <a class="ba-btn" href="{{ post.link }}" target="_blank" rel="noopener sponsored nofollow">Check price →</a>
   </div>
