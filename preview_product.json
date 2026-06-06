@@ -1,1 +1,11 @@
-{"products":[]}
+{
+  "products": [
+    {
+      "blog_divider": "",
+      "name": "hi",
+      "category": "ssr",
+      "link": "ssr",
+      "slug": "ssr"
+    }
+  ]
+}
