@@ -79,3 +79,11 @@ collections:
         name: "products"
         file: "products/cartedupdaily.json"
         fields: *product_blog_fields
+
+  - name: "preview"
+    label: "✨ Preview (scratch)"
+    files:
+      - label: "Preview product"
+        name: "preview"
+        file: "preview_product.json"
+        fields: *product_blog_fields
