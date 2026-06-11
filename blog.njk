@@ -153,5 +153,21 @@ permalink: "/{{ post.site }}/blogs/{{ post.slug }}/index.html"
 </div>
 
 {{ c.bottom | safe }}
+
+<script>
+  /* Hamburger menu for blog pages */
+  (function(){
+    var hamburger = document.getElementById('hamburger');
+    var mobileMenu = document.getElementById('mobileMenu');
+    if (!hamburger || !mobileMenu) return;
+    hamburger.addEventListener('click', function(e){
+      e.stopPropagation();
+      mobileMenu.style.display = (mobileMenu.style.display === 'block') ? 'none' : 'block';
+    });
+    document.addEventListener('click', function(){
+      mobileMenu.style.display = 'none';
+    });
+  })();
+</script>
 </body>
 </html>

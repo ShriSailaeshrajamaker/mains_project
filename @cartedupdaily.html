@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script async src="https://tally.so/widgets/embed.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0A3524">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="description" content="Discover useful products curated by @cartedupdaily">
     <title>@cartedupdaily</title>
-    <link rel="icon" type="image/png" href="https://instagram.fblr22-1.fna.fbcdn.net/v/t51.82787-19/709078462_18095094013961058_7389291740330769530_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fblr22-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gHy0oT5MpOxJGr6uo7VCsMPSnyRVtXqEd9iixEFbkRMz_x5wasRYtglyd-9iLZrgr4&_nc_ohc=V3dPoRNDiV8Q7kNvwHQnUT0&_nc_gid=QmNiMR8gi8ilyen5Z_I_eQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-J5ptNe6k1-fucgMCod3QvRsrMklj6VgPuL2eCKvtyTQ&oe=6A286E3E&_nc_sid=8b3546">
+    <link rel="icon" type="image/png" href="/cartedupdaily.jpg">
 
     <style>
         :root{
@@ -325,7 +329,7 @@
     <div class="navbar">
         <div class="nav-inner">
             <div class="logo">
-                <a href="https://www.instagram.com/cartedupdaily" target="_blank"><img src="https://instagram.fblr22-1.fna.fbcdn.net/v/t51.82787-19/709078462_18095094013961058_7389291740330769530_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fblr22-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gHy0oT5MpOxJGr6uo7VCsMPSnyRVtXqEd9iixEFbkRMz_x5wasRYtglyd-9iLZrgr4&_nc_ohc=V3dPoRNDiV8Q7kNvwHQnUT0&_nc_gid=QmNiMR8gi8ilyen5Z_I_eQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-J5ptNe6k1-fucgMCod3QvRsrMklj6VgPuL2eCKvtyTQ&oe=6A286E3E&_nc_sid=8b3546"></a>
+                <a href="https://www.instagram.com/cartedupdaily" target="_blank"><img src="/cartedupdaily.jpg"></a>
                 <span></span>
             </div>
 
@@ -336,6 +340,13 @@
     </svg>
     Instagram
 </a>
+            <a href="#"
+               data-tally-open="2Eo4dp"
+               data-tally-emoji-text="&#x1F44B;"
+               data-tally-emoji-animation="wave"
+               style="color:#ff9800;font-weight:700;">
+               &#x1F381; Giveaway
+            </a>
             </div>
 
             <div class="hamburger" id="hamburger">☰</div>
@@ -349,6 +360,13 @@
     </svg>
     Instagram
 </a>
+            <a href="#"
+               data-tally-open="2Eo4dp"
+               data-tally-emoji-text="&#x1F44B;"
+               data-tally-emoji-animation="wave"
+               style="color:#ff9800;font-weight:700;">
+               &#x1F381; Giveaway
+            </a>
         </div>
     </div>
 
@@ -362,6 +380,21 @@
     <div class="search-wrapper">
         <input id="searchInput" class="search-box" placeholder="Search products...">
     </div>
+
+<div style="max-width:1200px;margin:10px auto;padding:0 20px;">
+    <div style="background:#fff7ed;border:1px solid #f97316;border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;color:#7c2d12;">
+            &#x1F381; Win a free product
+        </span>
+        <button
+            data-tally-open="2Eo4dp"
+            data-tally-emoji-text="&#x1F44B;"
+            data-tally-emoji-animation="wave"
+            style="margin:0;padding:6px 14px;font-size:12px;cursor:pointer;background:#f97316;color:#fff;border:none;border-radius:6px;font-weight:700;">
+            &#x1F389; Join Giveaway &rarr;
+        </button>
+    </div>
+</div>
 
     <!-- CATEGORY TABS -->
     <div class="category-tabs">
@@ -485,7 +518,7 @@
                     const promo=document.createElement("div");
                     promo.className="product special-card";
                     promo.innerHTML=`
-                    <img src="logo.png" style="height:180px;object-fit:contain;background:#fff;">
+                    <img src="/logo.png" style="height:180px;object-fit:contain;background:#fff;">
                     <div class="product-title">🔥Visit Store</div>
                     `;
                     promo.onclick=()=>window.open("https://rixsto.in","_blank");
@@ -604,5 +637,10 @@
             This page contains affiliate links. We may earn a commission if you make a purchase through our links at no extra cost to you.
         </div>
     </footer>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("/sw.js"); });
+}
+</script>
 </body>
 </html>

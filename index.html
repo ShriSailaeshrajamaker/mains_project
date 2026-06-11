@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script async src="https://tally.so/widgets/embed.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0A3524">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="description" content="Discover useful products curated by RIXSTO">
     <title>Online Finds | RIXSTO</title>
     <link rel="icon" type="image/png" href="https://onlinefinds.rixsto.in/logo.png">
@@ -331,7 +335,16 @@
 
             <div class="nav-links">
                 <a href="https://rixsto.in" style="color:#22c55e;font-weight:600;">🔥 Main Store</a>
+            
                 <a href="https://rixsto.in/categories/trending-products">Trending</a>
+            
+                <a href="#"
+                   data-tally-open="2Eo4dp"
+                   data-tally-emoji-text="👋"
+                   data-tally-emoji-animation="wave"
+                   style="color:#ff9800;font-weight:700;">
+                   🎁 Giveaway
+                </a>
             </div>
 
             <div class="hamburger" id="hamburger">☰</div>
@@ -339,8 +352,17 @@
 
         <!-- Mobile Dropdown -->
         <div class="mobile-menu" id="mobileMenu">
-                <a href="https://rixsto.in" style="color:#22c55e;font-weight:600;">🔥 Main Store</a>
-                <a href="https://rixsto.in/categories/trending-products">Trending</a>
+            <a href="https://rixsto.in" style="color:#22c55e;font-weight:600;">🔥 Main Store</a>
+        
+            <a href="https://rixsto.in/categories/trending-products">Trending</a>
+        
+            <a href="#"
+               data-tally-open="2Eo4dp"
+               data-tally-emoji-text="👋"
+               data-tally-emoji-animation="wave"
+               style="color:#ff9800;font-weight:700;">
+               🎁 Giveaway
+            </a>
         </div>
     </div>
 
@@ -354,6 +376,23 @@
     <div class="search-wrapper">
         <input id="searchInput" class="search-box" placeholder="Search products...">
     </div>
+<div style="max-width:1200px;margin:10px auto;padding:0 20px;">
+    <div style="background:#ecfdf5;border:1px solid #22c55e;border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        
+        <span style="font-size:13px;font-weight:600;">
+            🎁 Win a free product
+        </span>
+
+        <button
+            data-tally-open="2Eo4dp"
+            data-tally-emoji-text="👋"
+            data-tally-emoji-animation="wave"
+            style="margin:0;padding:6px 12px;font-size:12px;cursor:pointer;background:#0A3524;color:#fff;border:none;border-radius:6px;font-weight:700;">
+            🎉 Join Giveaway →
+        </button>
+
+    </div>
+</div>
 
     <!-- CATEGORY TABS -->
     <div class="category-tabs">
@@ -363,10 +402,12 @@
     <!-- PRODUCTS -->
     <div class="products" id="productGrid"></div>
 
+
+
     <!-- PROMO BLOCK -->
     <div class="promo-block">
         <h3>👀 Finding these useful?</h3>
-        <p>We’ve got better deals & exclusive picks on our main store.</p>
+        <p>We've got better deals & exclusive picks on our main store.</p>
         <a href="https://rixsto.in" class="promo-btn">Explore RIXSTO →</a>
     </div>
 
@@ -613,6 +654,11 @@ if (window.netlifyIdentity) {
       });
     }
   });
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("/sw.js"); });
 }
 </script>
 </body>

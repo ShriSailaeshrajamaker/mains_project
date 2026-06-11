@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script async src="https://tally.so/widgets/embed.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0A3524">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="description" content="Discover useful products curated by @phase.blank">
     <title>@phase.blank</title>
-    <link rel="icon" type="image/png" href="phaseblank.jpg">
+    <link rel="icon" type="image/png" href="/phaseblank.jpg">
 
     <style>
         :root{
@@ -337,7 +341,7 @@
     <div class="navbar">
         <div class="nav-inner">
             <div class="logo">
-                <a href="https://www.instagram.com/phase.blank" target="_blank"><img src="phaseblank.jpg"></a>
+                <a href="https://www.instagram.com/phase.blank" target="_blank"><img src="/phaseblank.jpg"></a>
                 <span></span>
             </div>
 
@@ -348,6 +352,13 @@
     </svg>
     Instagram
 </a>
+            <a href="#"
+               data-tally-open="2Eo4dp"
+               data-tally-emoji-text="&#x1F44B;"
+               data-tally-emoji-animation="wave"
+               style="color:#ff9800;font-weight:700;">
+               &#x1F381; Giveaway
+            </a>
             </div>
 
             <div class="hamburger" id="hamburger">☰</div>
@@ -361,6 +372,13 @@
     </svg>
     Instagram
 </a>
+            <a href="#"
+               data-tally-open="2Eo4dp"
+               data-tally-emoji-text="&#x1F44B;"
+               data-tally-emoji-animation="wave"
+               style="color:#ff9800;font-weight:700;">
+               &#x1F381; Giveaway
+            </a>
         </div>
     </div>
 
@@ -374,6 +392,21 @@
     <div class="search-wrapper">
         <input id="searchInput" class="search-box" placeholder="Search products...">
     </div>
+
+<div style="max-width:1200px;margin:10px auto;padding:0 20px;">
+    <div style="background:#1a2433;border:1px solid #6f8fb3;border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;color:#e5edf7;">
+            &#x1F381; Win a free product
+        </span>
+        <button
+            data-tally-open="2Eo4dp"
+            data-tally-emoji-text="&#x1F44B;"
+            data-tally-emoji-animation="wave"
+            style="margin:0;padding:6px 14px;font-size:12px;cursor:pointer;background:#6f8fb3;color:#fff;border:none;border-radius:6px;font-weight:700;">
+            &#x1F389; Join Giveaway &rarr;
+        </button>
+    </div>
+</div>
 
     <!-- CATEGORY TABS -->
     <div class="category-tabs">
@@ -497,7 +530,7 @@
                     const promo=document.createElement("div");
                     promo.className="product special-card";
                     promo.innerHTML=`
-                    <img src="logo.png" style="height:180px;object-fit:contain;background:#fff;">
+                    <img src="/logo.png" style="height:180px;object-fit:contain;background:#fff;">
                     <div class="product-title">🔥Visit Store</div>
                     `;
                     promo.onclick=()=>window.open("https://rixsto.in","_blank");
@@ -616,5 +649,10 @@
             This page contains affiliate links. We may earn a commission if you make a purchase through our links at no extra cost to you.
         </div>
     </footer>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("/sw.js"); });
+}
+</script>
 </body>
 </html>
