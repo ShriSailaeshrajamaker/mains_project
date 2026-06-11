@@ -18,6 +18,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("playground.html");
   eleventyConfig.addPassthroughCopy("manifest.json");  // PWA
   eleventyConfig.addPassthroughCopy("sw.js");           // PWA service worker
+  eleventyConfig.addPassthroughCopy(".well-known");    // Android app link verification
 
   // Your storefront HTML files (the @-prefixed ones + index.html) are copied as-is.
   // We list them explicitly so Eleventy doesn't try to treat them as templates.
