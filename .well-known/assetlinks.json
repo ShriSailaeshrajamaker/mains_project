@@ -1,1 +1,8 @@
-[]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.tubular_sprinkles_b9eb13.twa",
+        "sha256_cert_fingerprints": ["9B:D3:B2:69:63:5E:B6:EF:2D:BE:CF:8D:92:BE:60:20:65:B7:B7:68:BB:2E:11:2F:AC:7B:A6:83:83:DF:B7:4C"]
+      }
+    }]
