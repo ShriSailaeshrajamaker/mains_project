@@ -261,25 +261,37 @@ function buildPreviewUrl(site, p){
           );
         }
 
-        // Which product card is open in the editor? Show only that one.
-        var openNames = [];
+        // Focus the product being edited: whichever item changed since the last
+        // render is the one you are typing in. New product added -> focus it.
+        var colName = collection.get("name") || "?";
+        var fi = null;
         try {
-          document.querySelectorAll("label").forEach(function(lab){
-            var t = (lab.textContent||"").trim().toLowerCase();
-            if(t.indexOf("product name") !== 0) return;
-            var wrap = lab.closest("div");
-            var inp = wrap && wrap.querySelector("input");
-            if(inp && inp.offsetParent !== null) openNames.push(inp.value || "");
-          });
+          window.__rxPrev  = window.__rxPrev  || {};
+          window.__rxFocus = window.__rxFocus || {};
+          var last = window.__rxPrev[colName];
+          if (last) {
+            if (products.length > last.length) {
+              window.__rxFocus[colName] = products.length - 1;   // new product -> focus it
+            } else if (products.length < last.length) {
+              window.__rxFocus[colName] = null;                  // removed -> show all
+            } else {
+              for (var di = 0; di < products.length; di++) {
+                if (JSON.stringify(products[di]) !== JSON.stringify(last[di])) {
+                  window.__rxFocus[colName] = di;
+                  break;
+                }
+              }
+            }
+          }
+          window.__rxPrev[colName] = products;
+          fi = window.__rxFocus[colName];
         } catch(e){}
-        var show = products;
-        if(openNames.length){
-          var filtered = products.filter(function(p){ return openNames.indexOf((p && p.name) || "") !== -1; });
-          if(filtered.length) show = filtered;
-        }
+        var show = (fi != null && products[fi]) ? [products[fi]] : products;
         var html = '<div style="background:'+th.bg+';min-height:100%;padding:10px 0;">';
-        if(show.length < products.length){
-          html += '<div style="background:#facc15;color:#000;text-align:center;padding:6px;font-size:12px;font-weight:700;">Showing the product you have open ('+show.length+' of '+products.length+') — collapse it to preview all</div>';
+        if(show.length === 1 && products.length > 1){
+          html += '<div style="background:#facc15;color:#000;text-align:center;padding:7px;font-size:12px;font-weight:700;">\u270F\uFE0F Previewing: '+esc(show[0].name||"(unnamed)")+' \u2014 product '+(fi+1)+' of '+products.length+' \u00b7 type in another product to switch</div>';
+        } else if (products.length > 1) {
+          html += '<div style="background:#e0e7ff;color:#1e293b;text-align:center;padding:7px;font-size:12px;font-weight:700;">Showing all '+products.length+' products \u2014 start typing in any product and the preview will focus on it</div>';
         }
         show.forEach(function(p, i){
           if(i>0) html += '<hr style="border:none;border-top:8px solid '+th.border+';margin:30px 0;">';
@@ -294,7 +306,7 @@ function buildPreviewUrl(site, p){
       ["products","preview","onlinefinds","dailyloot","justoneclick","phaseblank","cartedupdaily"].forEach(function(name){
         CMS.registerPreviewTemplate(name, BlogPreview);
       });
-      console.log("[Rixsto] LIVE blog preview registered (live preview v3: html-body + open-card focus)");
+      console.log("[Rixsto] LIVE blog preview registered (live preview v4: focus follows your typing)");
     } catch (e) {
       console.error("[Rixsto] Preview registration failed:", e);
     }
